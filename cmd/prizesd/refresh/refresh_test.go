@@ -1,4 +1,4 @@
-package refreshdata
+package refresh
 
 import (
 	"testing"

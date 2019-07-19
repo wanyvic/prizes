@@ -1,4 +1,4 @@
-package db
+package mongodb
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 func Test_Connect(t *testing.T) {
-	mgo := mongodb{uri: "mongodb://localhost:27017", database: "docker"}
+	mgo := MongDBClient{URI: MongoDBDefaultURI, DataBase: MongoDBDefaultDataBase}
 
 	cli, err := client.NewClient(client.DefaultDockerHost, "1.38", nil, map[string]string{"Content-type": "application/x-tar"})
 	if err != nil {
@@ -31,14 +31,16 @@ func Test_Connect(t *testing.T) {
 }
 func Test_op(t *testing.T) {
 	fmt.Println("test_op")
-	service, err := MongDBClient.FindServiceOne("qrjvzqos4y49nvwp6akswuck6")
+
+	mgo := MongDBClient{URI: MongoDBDefaultURI, DataBase: MongoDBDefaultDataBase}
+	service, err := mgo.FindServiceOne("qrjvzqos4y49nvwp6akswuck6")
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	fmt.Printf("service: %s\n", service.ID)
-	tasklist, err := MongDBClient.FindTaskList(service.ID)
+	tasklist, err := mgo.FindTaskList(service.ID)
 	if err != nil {
 		t.Error(err)
 		return

@@ -1,5 +1,0 @@
-package dataloop
-
-func init() {
-	
-}
