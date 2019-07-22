@@ -12,3 +12,4 @@
 *.out
 daemon
 .prizes.yaml
+cmd/prizesd/prizesd

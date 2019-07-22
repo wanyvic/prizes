@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/sirupsen/logrus"
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
 )
 
-func removeService(serviceID string) error {
-	fmt.Println("removeService: serviceID : ", serviceID)
+func RemoveService(serviceID string) error {
+	logrus.Info("RemoveService: ", serviceID)
 	err := dockerapi.CLI.ServiceRemove(context.Background(), serviceID)
 	if err != nil {
 		return err

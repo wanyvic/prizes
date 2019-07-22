@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/wanyvic/prizes/cmd/db"
 )
 
@@ -23,12 +24,12 @@ type TaskStatistics struct {
 }
 
 func ServiceTimeUsed(serviceID string) (ServiceStatistics, error) {
+	logrus.Info("ServiceTimeUsed: ", serviceID)
 	var serviceStatistics ServiceStatistics
 	service, err := db.DBimplement.FindServiceOne(serviceID)
 	if err != nil {
 		return serviceStatistics, err
 	}
-	fmt.Printf("service: %s\n", service.ID)
 	taskList, err := db.DBimplement.FindTaskList(service.ID)
 	if err != nil {
 		return serviceStatistics, err
@@ -38,7 +39,8 @@ func ServiceTimeUsed(serviceID string) (ServiceStatistics, error) {
 	var taskStatistics []TaskStatistics
 	var td time.Duration
 	latestTime := time.Unix(0, 0).UTC()
-	fmt.Println("taskID", "nodeID", "CreatedAt", "RemoveAt", "useTime", "state")
+
+	logrus.Info("taskID", "nodeID", "CreatedAt", "RemoveAt", "useTime", "state")
 	for _, task := range *taskList {
 		removeTime := task.Status.Timestamp
 		if task.DesiredState != "shutdown" {
@@ -52,6 +54,7 @@ func ServiceTimeUsed(serviceID string) (ServiceStatistics, error) {
 		td += task.Status.Timestamp.Sub(task.CreatedAt)
 	}
 	serviceStatistics.TaskList = taskStatistics
-	fmt.Printf("service total time %s\n", td)
+
+	logrus.Info("ervice total time: ", td)
 	return serviceStatistics, nil
 }

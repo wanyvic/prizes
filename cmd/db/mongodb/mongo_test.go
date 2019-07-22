@@ -47,6 +47,9 @@ func Test_op(t *testing.T) {
 	}
 	var td time.Duration
 	for _, task := range *tasklist {
+		if task.DesiredState == "running" {
+			task.Status.Timestamp = time.Now().UTC()
+		}
 		fmt.Printf("\ttask: %s %s %s\n", task.ID, task.DesiredState, task.Status.Timestamp.Sub(task.CreatedAt))
 		td += task.Status.Timestamp.Sub(task.CreatedAt)
 	}
