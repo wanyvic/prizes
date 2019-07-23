@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/docker/docker/opts"
 	"github.com/spf13/pflag"
 	"github.com/wanyvic/prizes/cmd/prizesd/config"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
@@ -30,6 +31,9 @@ func (o *daemonOptions) InstallFlags(flags *pflag.FlagSet) {
 	flags.BoolVarP(&o.Debug, "debug", "D", false, "Enable debug mode")
 	flags.StringVarP(&o.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
 	flags.IntVarP(&o.TimeScale, "time-Scale", "t", refresh.DefaultTimeScale, "Set record Millisecond time scale to database")
+
+	hostOpt := opts.NewNamedListOptsRef("hosts", &o.Hosts, opts.ValidateHost)
+	flags.VarP(hostOpt, "host", "H", "Daemon socket(s) to connect to")
 }
 
 // SetDefaultOptions sets default values for options after flag parsing is

@@ -3,7 +3,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -13,14 +12,12 @@ import (
 	"time"
 
 	"github.com/docker/docker/cli/debug"
-	"github.com/docker/docker/daemon/listeners"
-	"github.com/docker/docker/dockerversion"
 	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/docker/go-connections/tlsconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/wanyvic/prizes/cmd/prizesd/config"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
+	httpserver "github.com/wanyvic/prizes/cmd/prizesd/server"
 )
 
 type DaemonCli struct {
@@ -103,7 +100,29 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 		debug.Enable()
 	}
 
-	refresh.WhileLoop()
+	if err := refresh.WhileLoop(); err != nil {
+		logrus.Warning(err)
+	}
+	logrus.Info(opts.Hosts)
+	if err != nil {
+		logrus.Warning(err)
+	}
+	for i := 0; i < len(opts.Hosts); i++ {
+		protoAddr := opts.Hosts[i]
+		protoAddrParts := strings.SplitN(protoAddr, "://", 2)
+		if len(protoAddrParts) != 2 {
+			logrus.Warning("bad format %s, expected PROTO://ADDR", protoAddr)
+		}
+
+		proto := protoAddrParts[0]
+		addr := protoAddrParts[1]
+
+		server, err := httpserver.NewServerWithOpts(httpserver.ServerOpts{Proto: proto, Addr: addr})
+		if err != nil {
+			logrus.Warning(err)
+		}
+		go server.Start()
+	}
 	return nil
 }
 
@@ -124,82 +143,4 @@ func configureDaemonLogs(conf *config.Config) error {
 		FullTimestamp:   true,
 	})
 	return nil
-}
-func newAPIServerConfig(cli *DaemonCli) (*apiserver.Config, error) {
-	serverConfig := &apiserver.Config{
-		Logging:     true,
-		SocketGroup: cli.Config.SocketGroup,
-		Version:     dockerversion.Version,
-		CorsHeaders: cli.Config.CorsHeaders,
-	}
-
-	if cli.Config.TLS {
-		tlsOptions := tlsconfig.Options{
-			CAFile:             cli.Config.CommonTLSOptions.CAFile,
-			CertFile:           cli.Config.CommonTLSOptions.CertFile,
-			KeyFile:            cli.Config.CommonTLSOptions.KeyFile,
-			ExclusiveRootPools: true,
-		}
-
-		if cli.Config.TLSVerify {
-			// server requires and verifies client's certificate
-			tlsOptions.ClientAuth = tls.RequireAndVerifyClientCert
-		}
-		tlsConfig, err := tlsconfig.Server(tlsOptions)
-		if err != nil {
-			return nil, err
-		}
-		serverConfig.TLSConfig = tlsConfig
-	}
-
-	if len(cli.Config.Hosts) == 0 {
-		cli.Config.Hosts = make([]string, 1)
-	}
-
-	return serverConfig, nil
-}
-
-func loadListeners(cli *DaemonCli, serverConfig *apiserver.Config) ([]string, error) {
-	var hosts []string
-	seen := make(map[string]struct{}, len(cli.Config.Hosts))
-
-	for i := 0; i < len(cli.Config.Hosts); i++ {
-		var err error
-		if cli.Config.Hosts[i], err = dopts.ParseHost(cli.Config.TLS, honorXDG, cli.Config.Hosts[i]); err != nil {
-			return nil, errors.Wrapf(err, "error parsing -H %s", cli.Config.Hosts[i])
-		}
-		if _, ok := seen[cli.Config.Hosts[i]]; ok {
-			continue
-		}
-		seen[cli.Config.Hosts[i]] = struct{}{}
-
-		protoAddr := cli.Config.Hosts[i]
-		protoAddrParts := strings.SplitN(protoAddr, "://", 2)
-		if len(protoAddrParts) != 2 {
-			return nil, fmt.Errorf("bad format %s, expected PROTO://ADDR", protoAddr)
-		}
-
-		proto := protoAddrParts[0]
-		addr := protoAddrParts[1]
-
-		// It's a bad idea to bind to TCP without tlsverify.
-		if proto == "tcp" && (serverConfig.TLSConfig == nil || serverConfig.TLSConfig.ClientAuth != tls.RequireAndVerifyClientCert) {
-			logrus.Warn("[!] DON'T BIND ON ANY IP ADDRESS WITHOUT setting --tlsverify IF YOU DON'T KNOW WHAT YOU'RE DOING [!]")
-		}
-		ls, err := listeners.Init(proto, addr, serverConfig.SocketGroup, serverConfig.TLSConfig)
-		if err != nil {
-			return nil, err
-		}
-		// If we're binding to a TCP port, make sure that a container doesn't try to use it.
-		if proto == "tcp" {
-			if err := allocateDaemonPort(addr); err != nil {
-				return nil, err
-			}
-		}
-		logrus.Debugf("Listener created for HTTP on %s (%s)", proto, addr)
-		hosts = append(hosts, protoAddrParts[1])
-		cli.api.Accept(addr, ls...)
-	}
-
-	return hosts, nil
 }
