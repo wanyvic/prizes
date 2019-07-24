@@ -1,5 +1,6 @@
 package api
 
 var (
-	DefaultVersion = "0.1"
+	DefaultAPIVersion = "0.10"
+	MinAPIVersion     = "0.10"
 )

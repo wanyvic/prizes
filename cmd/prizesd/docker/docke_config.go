@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	FExit                   = false
-	defaultDockerAPIVersion = "1.38"
+	Fexit                   = false
+	DefaultDockerAPIVersion = "1.38"
 	CLI                     *client.Client
 )
 
 func init() {
 	var err error
-	CLI, err = client.NewClient(client.DefaultDockerHost, defaultDockerAPIVersion, nil, map[string]string{"Content-type": "application/x-tar"})
+	CLI, err = client.NewClient(client.DefaultDockerHost, DefaultDockerAPIVersion, nil, map[string]string{"Content-type": "application/x-tar"})
 	if err != nil {
 		panic(err)
 	}
@@ -25,6 +25,6 @@ func init() {
 
 	go func() {
 		<-c
-		FExit = true
+		Fexit = true
 	}()
 }

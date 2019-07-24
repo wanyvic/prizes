@@ -22,6 +22,29 @@ var (
 func init() {
 	TimeScale = time.Duration(DefaultTimeScale) * time.Millisecond
 }
+func WhileLoop() error {
+	for {
+		logrus.Info("Refreshing docker data to database")
+		if err := refreshDockerNode(); err != nil {
+			logrus.Error(err.Error())
+		}
+		if err := refreshDockerService(); err != nil {
+			logrus.Error(err.Error())
+		}
+		for i := TimeScale; i > 0; {
+			if i-time.Second > 0 {
+				time.Sleep(time.Second)
+				i -= time.Second
+			} else {
+				time.Sleep(i)
+				i = 0
+			}
+			if dockerapi.Fexit {
+				return nil
+			}
+		}
+	}
+}
 func RefreshStopService(serviceID string) error {
 	logrus.Info("RefreshStopService")
 	taskList, err := db.DBimplement.FindTaskList(serviceID)
@@ -41,7 +64,7 @@ func RefreshStopService(serviceID string) error {
 }
 
 func refreshDockerTaskFromService(serviceID string) error {
-	logrus.Info("refreshDockerTaskFromService")
+	logrus.Debug("refreshDockerTaskFromService")
 	validNameFilter := filters.NewArgs()
 	validNameFilter.Add("service", serviceID)
 	tasklist, err := dockerapi.CLI.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
@@ -49,44 +72,21 @@ func refreshDockerTaskFromService(serviceID string) error {
 		return err
 	}
 	for _, task := range tasklist {
-		logrus.Info("\ttask: ", task.ID)
+		logrus.Debug("\ttask: ", task.ID)
 		if _, err := db.DBimplement.UpdateTaskOne(task); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func WhileLoop() error {
-	logrus.Info("WhileLoop")
-	for {
-		if err := refreshDockerNode(); err != nil {
-			return err
-		}
-		if err := refreshDockerService(); err != nil {
-			return err
-		}
-		for i := TimeScale; i > 0; {
-			if i-time.Second > 0 {
-				time.Sleep(time.Second)
-				i -= time.Second
-			} else {
-				time.Sleep(i)
-				i = 0
-			}
-			if dockerapi.FExit {
-				return nil
-			}
-		}
-	}
-}
 func refreshDockerService() error {
-	logrus.Info("refreshDockerService")
+	logrus.Debug("refreshDockerService")
 	servicelist, err := dockerapi.CLI.ServiceList(context.Background(), types.ServiceListOptions{})
 	if err != nil {
 		return err
 	}
 	for _, service := range servicelist {
-		logrus.Info("\tservice: ", service.ID)
+		logrus.Debug("\tservice: ", service.ID)
 		if _, err := db.DBimplement.UpdateServiceOne(service); err != nil {
 			return err
 		}
@@ -97,13 +97,13 @@ func refreshDockerService() error {
 	return nil
 }
 func refreshDockerNode() error {
-	logrus.Info("refreshDockerNode")
+	logrus.Debug("refreshDockerNode")
 	nodelist, err := dockerapi.CLI.NodeList(context.Background(), types.NodeListOptions{})
 	if err != nil {
 		return err
 	}
 	for _, node := range nodelist {
-		logrus.Info("\tnode: ", node.ID)
+		logrus.Debug("\tnode: ", node.ID)
 		if _, err := db.DBimplement.UpdateNodeOne(node); err != nil {
 			return err
 		}

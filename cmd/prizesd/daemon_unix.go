@@ -99,29 +99,11 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	if cli.Config.Debug {
 		debug.Enable()
 	}
-
+	if err := configureServer(opts.Hosts); err != nil {
+		logrus.Warning(err)
+	}
 	if err := refresh.WhileLoop(); err != nil {
 		logrus.Warning(err)
-	}
-	logrus.Info(opts.Hosts)
-	if err != nil {
-		logrus.Warning(err)
-	}
-	for i := 0; i < len(opts.Hosts); i++ {
-		protoAddr := opts.Hosts[i]
-		protoAddrParts := strings.SplitN(protoAddr, "://", 2)
-		if len(protoAddrParts) != 2 {
-			logrus.Warning("bad format %s, expected PROTO://ADDR", protoAddr)
-		}
-
-		proto := protoAddrParts[0]
-		addr := protoAddrParts[1]
-
-		server, err := httpserver.NewServerWithOpts(httpserver.ServerOpts{Proto: proto, Addr: addr})
-		if err != nil {
-			logrus.Warning(err)
-		}
-		go server.Start()
 	}
 	return nil
 }
@@ -142,5 +124,30 @@ func configureDaemonLogs(conf *config.Config) error {
 		DisableColors:   conf.RawLogs,
 		FullTimestamp:   true,
 	})
+	return nil
+}
+func configureServer(hosts []string) error {
+	if len(hosts) > 0 {
+		for i := 0; i < len(hosts); i++ {
+			protoAddr := hosts[i]
+			protoAddrParts := strings.SplitN(protoAddr, "://", 2)
+			if len(protoAddrParts) != 2 {
+				return fmt.Errorf("bad format %s, expected PROTO://ADDR", protoAddr)
+			}
+			proto := protoAddrParts[0]
+			addr := protoAddrParts[1]
+			server, err := httpserver.NewServerWithOpts(httpserver.ServerOpts{Proto: proto, Addr: addr})
+			if err != nil {
+				return err
+			}
+			go server.Start()
+		}
+	} else {
+		server, err := httpserver.NewServer("unix")
+		if err != nil {
+			return err
+		}
+		go server.Start()
+	}
 	return nil
 }

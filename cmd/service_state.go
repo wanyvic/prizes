@@ -6,31 +6,13 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/wanyvic/prizes/api/types"
 	"github.com/wanyvic/prizes/cmd/db"
 )
 
-type ServiceStatistics struct {
-	ServiceID string
-	CreatedAt time.Time
-	RemoveAt  time.Time
-	State     string
-	TaskList  []TaskStatistics
-}
-type TaskStatistics struct {
-	TaskID         string
-	NodeID         string
-	ReceiveAddress string
-	CreatedAt      time.Time
-	RemoveAt       time.Time
-	State          string
-	Msg            string
-	Err            string
-	DesiredState   string
-}
-
-func ServiceState(serviceID string) (ServiceStatistics, error) {
+func ServiceState(serviceID string) (types.ServiceStatistics, error) {
 	logrus.Info("ServiceState: ", serviceID)
-	var serviceStatistics ServiceStatistics
+	var serviceStatistics types.ServiceStatistics
 	service, err := db.DBimplement.FindServiceOne(serviceID)
 	if err != nil {
 		return serviceStatistics, err
@@ -41,7 +23,7 @@ func ServiceState(serviceID string) (ServiceStatistics, error) {
 	}
 	serviceStatistics.ServiceID = serviceID
 	serviceStatistics.CreatedAt = service.CreatedAt
-	var taskStatistics []TaskStatistics
+	var taskStatistics []types.TaskStatistics
 	var td time.Duration
 	latestTime := time.Unix(0, 0).UTC()
 
@@ -62,7 +44,7 @@ func ServiceState(serviceID string) (ServiceStatistics, error) {
 			strAddr = *p_Addr
 		}
 		taskStatistics = append(taskStatistics,
-			TaskStatistics{
+			types.TaskStatistics{
 				TaskID:         task.ID,
 				NodeID:         task.NodeID,
 				CreatedAt:      task.Meta.CreatedAt,
