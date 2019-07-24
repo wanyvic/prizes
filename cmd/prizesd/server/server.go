@@ -70,7 +70,8 @@ func NewServerWithOpts(opts ServerOpts) (*Server, error) {
 	}()
 	return &server, nil
 }
-func (u *Server) Start() error {
+func (u *Server) Start() {
+	logrus.Info(fmt.Sprintf("%s://%s Server Starting", u.proto, u.addr))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 	u.server = &http.Server{
@@ -80,19 +81,18 @@ func (u *Server) Start() error {
 		os.Remove(u.addr)
 		unixListener, err := net.Listen("unix", u.addr)
 		if err != nil {
-			return err
+			logrus.Error(fmt.Sprintf("%s://%s Server start error: %s ", u.proto, u.addr, err))
 		}
 		u.server.Serve(unixListener)
 	} else if strings.Contains(u.proto, "tcp") {
 		unixListener, err := net.Listen("tcp", u.addr)
 		if err != nil {
-			return err
+			logrus.Error(fmt.Sprintf("%s://%s Server start error: %s ", u.proto, u.addr, err))
 		}
 		u.server.Serve(unixListener)
 	} else {
-		return errors.New("undefine proto")
+		logrus.Error(fmt.Sprintf("%s://%s Server start error: undefine proto ", u.proto, u.addr))
 	}
-	return nil
 }
 
 func (u *Server) Stop() {
@@ -114,19 +114,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	switch {
-	case strings.Contains(r.URL.String(), "CreateService"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "createservice"):
 		CreateService(w, r)
-	case strings.Contains(r.URL.String(), "UpdateService"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "updateservice"):
 		UpdateService(w, r)
-	case strings.Contains(r.URL.String(), "RemoveService"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "removeservice"):
 		RemoveService(w, r)
-	case strings.Contains(r.URL.String(), "GetServiceInfo"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "getserviceinfo"):
 		GetServiceInfo(w, r)
-	case strings.Contains(r.URL.String(), "GetTaskInfo"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "gettaskinfo"):
 		GetTaskInfo(w, r)
-	case strings.Contains(r.URL.String(), "GetNodeInfo"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "getnodeinfo"):
 		GetNodeInfo(w, r)
-	case strings.Contains(r.URL.String(), "GetServiceState"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "getservicestate"):
 		GetServiceState(w, r)
 	default:
 		otherCommand(w, r)

@@ -91,18 +91,19 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 		return err
 	}
 
-	logrus.Info("Starting up")
-
 	cli.configFile = &opts.configFile
 	cli.flags = opts.flags
 
 	if cli.Config.Debug {
 		debug.Enable()
 	}
+
+	logrus.Info("Starting up")
 	if err := configureServer(opts.Hosts); err != nil {
 		logrus.Warning(err)
 	}
-	if err := refresh.WhileLoop(); err != nil {
+	loop := refresh.NewRefreshMoudle()
+	if err := loop.WhileLoop(); err != nil {
 		logrus.Warning(err)
 	}
 	return nil
@@ -130,12 +131,14 @@ func configureServer(hosts []string) error {
 	if len(hosts) > 0 {
 		for i := 0; i < len(hosts); i++ {
 			protoAddr := hosts[i]
+			logrus.Info("configure Server: ", protoAddr)
 			protoAddrParts := strings.SplitN(protoAddr, "://", 2)
 			if len(protoAddrParts) != 2 {
 				return fmt.Errorf("bad format %s, expected PROTO://ADDR", protoAddr)
 			}
 			proto := protoAddrParts[0]
 			addr := protoAddrParts[1]
+
 			server, err := httpserver.NewServerWithOpts(httpserver.ServerOpts{Proto: proto, Addr: addr})
 			if err != nil {
 				return err
@@ -143,6 +146,7 @@ func configureServer(hosts []string) error {
 			go server.Start()
 		}
 	} else {
+		logrus.Info("starting default unix sock server")
 		server, err := httpserver.NewServer("unix")
 		if err != nil {
 			return err

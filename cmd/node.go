@@ -9,14 +9,22 @@ import (
 )
 
 func GetNodeInfo(NodeID string) (*swarm.Node, error) {
-	node, _, err := dockerapi.CLI.NodeInspectWithRaw(context.Background(), NodeID)
+	cli, err := dockerapi.GetDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	node, _, err := cli.NodeInspectWithRaw(context.Background(), NodeID)
 	if err != nil {
 		return nil, err
 	}
 	return &node, nil
 }
 func RemoveNode(NodeID string, force bool) error {
-	err := dockerapi.CLI.NodeRemove(context.Background(), NodeID, types.NodeRemoveOptions{Force: force})
+	cli, err := dockerapi.GetDockerClient()
+	if err != nil {
+		return err
+	}
+	err = cli.NodeRemove(context.Background(), NodeID, types.NodeRemoveOptions{Force: force})
 	if err != nil {
 		return err
 	}

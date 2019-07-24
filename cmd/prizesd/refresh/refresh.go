@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/sirupsen/logrus"
 	"github.com/wanyvic/prizes/cmd/db"
-	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 )
 
 const (
@@ -19,16 +20,25 @@ var (
 	TimeScale time.Duration
 )
 
+type RefreshMoudle struct {
+	TimeScale time.Duration
+}
+
 func init() {
 	TimeScale = time.Duration(DefaultTimeScale) * time.Millisecond
 }
-func WhileLoop() error {
+func NewRefreshMoudle() *RefreshMoudle {
+	r := &RefreshMoudle{TimeScale: TimeScale}
+	return r
+}
+func (r *RefreshMoudle) WhileLoop() error {
+	sign := NewSign()
 	for {
 		logrus.Info("Refreshing docker data to database")
-		if err := refreshDockerNode(); err != nil {
+		if err := r.refreshDockerNode(); err != nil {
 			logrus.Error(err.Error())
 		}
-		if err := refreshDockerService(); err != nil {
+		if err := r.refreshDockerService(); err != nil {
 			logrus.Error(err.Error())
 		}
 		for i := TimeScale; i > 0; {
@@ -39,7 +49,7 @@ func WhileLoop() error {
 				time.Sleep(i)
 				i = 0
 			}
-			if dockerapi.Fexit {
+			if sign.CheckSign() {
 				return nil
 			}
 		}
@@ -63,11 +73,15 @@ func RefreshStopService(serviceID string) error {
 	return nil
 }
 
-func refreshDockerTaskFromService(serviceID string) error {
+func (r *RefreshMoudle) refreshDockerTaskFromService(serviceID string) error {
 	logrus.Debug("refreshDockerTaskFromService")
+	cli, err := dockerapi.GetDockerClient()
+	if err != nil {
+		return err
+	}
 	validNameFilter := filters.NewArgs()
 	validNameFilter.Add("service", serviceID)
-	tasklist, err := dockerapi.CLI.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
+	tasklist, err := cli.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
 	if err != nil {
 		return err
 	}
@@ -79,9 +93,13 @@ func refreshDockerTaskFromService(serviceID string) error {
 	}
 	return nil
 }
-func refreshDockerService() error {
+func (r *RefreshMoudle) refreshDockerService() error {
 	logrus.Debug("refreshDockerService")
-	servicelist, err := dockerapi.CLI.ServiceList(context.Background(), types.ServiceListOptions{})
+	cli, err := dockerapi.GetDockerClient()
+	if err != nil {
+		return err
+	}
+	servicelist, err := cli.ServiceList(context.Background(), types.ServiceListOptions{})
 	if err != nil {
 		return err
 	}
@@ -90,15 +108,19 @@ func refreshDockerService() error {
 		if _, err := db.DBimplement.UpdateServiceOne(service); err != nil {
 			return err
 		}
-		if err := refreshDockerTaskFromService(service.ID); err != nil {
+		if err := r.refreshDockerTaskFromService(service.ID); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func refreshDockerNode() error {
+func (r *RefreshMoudle) refreshDockerNode() error {
 	logrus.Debug("refreshDockerNode")
-	nodelist, err := dockerapi.CLI.NodeList(context.Background(), types.NodeListOptions{})
+	cli, err := dockerapi.GetDockerClient()
+	if err != nil {
+		return err
+	}
+	nodelist, err := cli.NodeList(context.Background(), types.NodeListOptions{})
 	if err != nil {
 		return err
 	}
