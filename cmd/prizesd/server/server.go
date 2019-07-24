@@ -126,6 +126,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		GetTaskInfo(w, r)
 	case strings.Contains(strings.ToLower(r.URL.String()), "getnodeinfo"):
 		GetNodeInfo(w, r)
+	case strings.Contains(strings.ToLower(r.URL.String()), "getnodelist"):
+		GetNodeList(w, r)
 	case strings.Contains(strings.ToLower(r.URL.String()), "getservicestate"):
 		GetServiceState(w, r)
 	default:

@@ -20,3 +20,23 @@ type TaskStatistics struct {
 	Err            string    `json:"err,omitempty"`
 	DesiredState   string    `json:"desired_state,omitempty"`
 }
+type NodeListStatistics struct {
+	TotalCount        int
+	AvailabilityCount int
+	UsableCount       int
+	List              []NodeInfo
+}
+type NodeInfo struct {
+	NodeID          string
+	NodeState       string
+	Labels          map[string]string
+	ReachAddress    string
+	CPUType         string
+	CPUThread       int
+	MemoryType      string
+	MemoryCount     int //GB
+	GPUType         string
+	GPUCount        int
+	PersistentStore string
+	OnWorking       bool
+}

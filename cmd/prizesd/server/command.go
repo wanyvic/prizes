@@ -127,6 +127,19 @@ func GetNodeInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprintf(w, string(json))
 }
+func GetNodeList(w http.ResponseWriter, r *http.Request) {
+	nodeListStatistics, err := cmd.GetNodeList()
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+		return
+	}
+	json, err := json.Marshal(*nodeListStatistics)
+	if err != nil {
+		fmt.Fprintf(w, "json.Marshal error")
+		return
+	}
+	fmt.Fprintf(w, string(json))
+}
 func GetServiceState(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	serviceStatistics, err := cmd.ServiceState(serviceID)
