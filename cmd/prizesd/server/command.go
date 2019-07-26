@@ -85,9 +85,9 @@ func RemoveService(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprintf(w, "ServiceRemove Successed")
 }
-func GetServiceInfo(w http.ResponseWriter, r *http.Request) {
+func GetService(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	service, err := cmd.ServiceInfo(serviceID)
+	service, err := cmd.Service(serviceID)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return

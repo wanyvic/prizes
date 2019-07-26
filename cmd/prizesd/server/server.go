@@ -114,21 +114,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	switch {
-	case strings.Contains(strings.ToLower(r.URL.String()), "createservice"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "servicecreate"):
 		CreateService(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "updateservice"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "serviceupdate"):
 		UpdateService(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "removeservice"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "servicedelete"):
 		RemoveService(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "getserviceinfo"):
-		GetServiceInfo(w, r)
+	case strings.Contains(strings.ToLower(r.URL.String()), "getservice"):
+		GetService(w, r)
 	case strings.Contains(strings.ToLower(r.URL.String()), "gettaskinfo"):
 		GetTaskInfo(w, r)
 	case strings.Contains(strings.ToLower(r.URL.String()), "getnodeinfo"):
 		GetNodeInfo(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "getnodelist"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "getnodes"):
 		GetNodeList(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "getservicestate"):
+	case strings.Contains(strings.ToLower(r.URL.String()), "servicestate"):
 		GetServiceState(w, r)
 	default:
 		otherCommand(w, r)

@@ -10,6 +10,8 @@ import (
 	"github.com/wanyvic/prizes/cmd/db"
 )
 
+//	根据ServiceID 去数据库中获取 所有task 状态、用时、地址等信息
+//
 func ServiceState(serviceID string) (types.ServiceStatistics, error) {
 	logrus.Info("ServiceState: ", serviceID)
 	var serviceStatistics types.ServiceStatistics

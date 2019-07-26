@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/docker/docker/api/types/swarm"
+	"github.com/wanyvic/prizes/api/types/service"
 	"github.com/wanyvic/prizes/cmd/db/mongodb"
 )
 
@@ -10,11 +11,13 @@ type DataBase interface {
 	InsertServiceOne(swarm.Service) (bool, error)
 	InsertTaskOne(swarm.Task) (bool, error)
 	UpdateNodeOne(swarm.Node) (bool, error)
-	UpdateServiceOne(swarm.Service) (bool, error)
+	UpdateServiceOne(service.PrizesService) (bool, error)
 	UpdateTaskOne(swarm.Task) (bool, error)
 	FindNodeOne(NodeID string) (*swarm.Node, error)
 	FindServiceOne(serviceID string) (*swarm.Service, error)
 	FindTaskList(serviceID string) (*[]swarm.Task, error)
+	// UpdateServiceOrderOne(prizestypes.ServiceOrder) (bool, error)
+	// FindServiceOrderOne(orderID string) (*prizestypes.ServiceOrder, error)
 }
 
 var (
