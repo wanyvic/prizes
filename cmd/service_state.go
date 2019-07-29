@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/docker/docker/api/types/swarm"
 	"github.com/sirupsen/logrus"
 	"github.com/wanyvic/prizes/api/types"
 	"github.com/wanyvic/prizes/cmd/db"
@@ -32,7 +33,7 @@ func ServiceState(serviceID string) (types.ServiceStatistics, error) {
 	logrus.Info("taskID", "nodeID", "CreatedAt", "RemoveAt", "useTime", "state", "Address")
 	for _, task := range *taskList {
 		removeTime := task.Status.Timestamp
-		if task.DesiredState != "shutdown" {
+		if task.DesiredState != swarm.TaskStateShutdown {
 			removeTime = time.Unix(0, 0).UTC()
 
 			serviceStatistics.State = "running"
@@ -52,10 +53,10 @@ func ServiceState(serviceID string) (types.ServiceStatistics, error) {
 				CreatedAt:      task.Meta.CreatedAt,
 				RemoveAt:       removeTime,
 				ReceiveAddress: strAddr,
-				State:          string(task.Status.State),
+				State:          task.Status.State,
 				Msg:            task.Status.Message,
 				Err:            task.Status.Err,
-				DesiredState:   string(task.DesiredState),
+				DesiredState:   task.DesiredState,
 			})
 		fmt.Println(task.ID, task.NodeID, task.Meta.CreatedAt, removeTime, task.Status.Timestamp.Sub(task.CreatedAt), task.DesiredState, strAddr)
 		td += task.Status.Timestamp.Sub(task.CreatedAt)

@@ -3,7 +3,6 @@ package prizeservice
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"fmt"
 	"math/big"
 	"net"
@@ -11,48 +10,61 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containerd/containerd/mount"
+	"crypto/rand"
+	mathRand "math/rand"
+
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/sirupsen/logrus"
-	prizestypes "github.com/wanyvic/prizes/api/types"
-	"github.com/wanyvic/prizes/api/types/prizeservice"
-	"github.com/wanyvic/prizes/cmd/db"
-
+	"github.com/wanyvic/prizes/api/types/order"
+	"github.com/wanyvic/prizes/api/types/service"
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
+)
+
+var (
+	DefaultDockerImage = "massgrid/10.0-base-ubuntu16.04"
 )
 
 // 创建 服务
 // 通过 serviceCreate 配置信息创建服务 返回 PrizesService 和错误信息
-func Create(serviceCreate *prizeservice.ServiceCreate) (prizeService *PrizesService, err error) {
-	logrus.Info("PrizesService ServiceCreate")
-	prizeService.CreateSpec = *serviceCreate
-
-	serviceSpec := preaseServiceSpec(&serviceCreate)
+func Create(serviceCreate *service.ServiceCreate) (*service.PrizesService, *types.ServiceCreateResponse, error) {
+	logrus.Info("PrizesService Create")
+	serviceSpec := parseServiceCreateSpec(serviceCreate)
 	cli, err := dockerapi.GetDockerClient()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	response, err := cli.ServiceCreate(context.Background(), *serviceSpec, types.ServiceCreateOptions{})
+	response := types.ServiceCreateResponse{}
+	response, err = cli.ServiceCreate(context.Background(), *serviceSpec, types.ServiceCreateOptions{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	prizeService.DockerSerivce, _, err = cli.ServiceInspectWithRaw(context.Background(), response.ID, types.ServiceInspectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	prizeService.setFirstOrder()
-	_, err = db.DBimplement.UpdateServiceOne(*prizeService)
-	if err != nil {
-		return nil, err
-	}
+
+	prizeService := service.PrizesService{CreateSpec: *serviceCreate}
+	// prizeService.DockerSerivce, _, err = cli.ServiceInspectWithRaw(context.Background(), response.ID, types.ServiceInspectOptions{})
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+
+	serviceCreateOrder(&prizeService)
+
 	logrus.Info(fmt.Sprintf("CreateService completed: ID: %s ,Warning: %s", response.ID, response.Warnings))
-	return prizeService, nil
+	return &prizeService, &response, nil
 }
 
-func preaseServiceSpec(serviceCreate *prizestypes.ServiceCreate) (spec *swarm.ServiceSpec) {
+func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.ServiceSpec {
 	replicas := uint64(1)
-	spec.Name = serviceCreate.ServiceName[0:10] + "_" + CreateRandomString(6)
+	spec := swarm.ServiceSpec{}
+	spec.TaskTemplate.ContainerSpec = &swarm.ContainerSpec{}
+	if len(serviceCreate.ServiceName) > 10 {
+		spec.Name = serviceCreate.ServiceName[:10]
+		spec.Name += "_" + CreateRandomString(6)
+	} else {
+		spec.Name = CreateRandomString(10)
+	}
+
+	spec.Labels = make(map[string]string)
 	spec.Labels["com.massgird.deletetime"] = time.Now().UTC().Add(time.Duration(float64(serviceCreate.Amount)/float64(serviceCreate.ServicePrice)*3600.0) * time.Second).String()
 	spec.Labels["com.massgrid.pubkey"] = serviceCreate.Pubkey
 	spec.Labels["com.massgrid.price"] = strconv.FormatInt(serviceCreate.ServicePrice, 10)
@@ -64,8 +76,8 @@ func preaseServiceSpec(serviceCreate *prizestypes.ServiceCreate) (spec *swarm.Se
 	spec.Labels["com.massgrid.gputype"] = serviceCreate.GPUType
 	spec.Labels["com.massgrid.gpucount"] = strconv.FormatInt(serviceCreate.GPUCount, 10)
 	spec.Labels["com.massgrid.outpoint.1."+serviceCreate.OutPoint] = strconv.FormatBool(false)
-	spec.Mode.Replicated.Replicas = &replicas
 
+	spec.Mode.Replicated = &swarm.ReplicatedService{Replicas: &replicas}
 	if strings.Contains(serviceCreate.Image, "massgrid/") {
 		spec.TaskTemplate.ContainerSpec.Image = serviceCreate.Image
 	} else {
@@ -73,9 +85,11 @@ func preaseServiceSpec(serviceCreate *prizestypes.ServiceCreate) (spec *swarm.Se
 	}
 	spec.TaskTemplate.ContainerSpec.User = "root"
 
-	limits := swarm.GenericResource{}
+	limits := swarm.GenericResource{DiscreteResourceSpec: &swarm.DiscreteGenericResource{}}
 	limits.DiscreteResourceSpec.Kind = serviceCreate.GPUType
 	limits.DiscreteResourceSpec.Value = serviceCreate.GPUCount
+
+	spec.TaskTemplate.Resources = &swarm.ResourceRequirements{Reservations: &swarm.Resources{}}
 	spec.TaskTemplate.Resources.Reservations.GenericResources = append(spec.TaskTemplate.Resources.Reservations.GenericResources, limits)
 	if serviceCreate.SSHPubkey != "" {
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "N2N_SERVERIP="+GetFreeIp().String())
@@ -93,8 +107,8 @@ func preaseServiceSpec(serviceCreate *prizestypes.ServiceCreate) (spec *swarm.Se
 	for k, v := range serviceCreate.ENV {
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, strings.ToUpper(k+"="+v))
 	}
-
 	//constraints
+	spec.TaskTemplate.Placement = &swarm.Placement{}
 	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "node.role == worker")
 	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputype  == "+serviceCreate.CPUType)
 	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputhread == "+strconv.FormatInt(serviceCreate.CPUThread, 10))
@@ -105,19 +119,10 @@ func preaseServiceSpec(serviceCreate *prizestypes.ServiceCreate) (spec *swarm.Se
 
 	mount := mount.Mount{Source: "/dev/net", Target: "/dev/net", ReadOnly: true}
 	spec.TaskTemplate.ContainerSpec.Mounts = append(spec.TaskTemplate.ContainerSpec.Mounts, mount)
-	return spec
+
+	return &spec
 }
-func preaseServiceUpdateSpec(service *swarm.Service, serviceUpdate *prizestypes.ServiceUpdate) (spec *swarm.ServiceSpec) {
-	service.Spec.Labels["com.massgird.deletetime"] = service.Meta.CreatedAt.Add(time.Duration(float64(serviceUpdate.Amount)/float64(serviceUpdate.ServicePrice)*3600.0) * time.Second).String()
-	num := 1
-	for k, v := range spec.Labels {
-		if strings.Contains(k, "com.massgrid.outpoint") {
-			num++
-		}
-	}
-	spec.Labels["com.massgrid.outpoint."+strconv.Itoa(num)+"."+serviceUpdate.OutPoint] = strconv.FormatBool(false)
-	return &service.Spec
-}
+
 func CreateRandomString(len int) string {
 	var container string
 	var str = "abcdefghijklmnopqrstuvwxyz1234567890"
@@ -145,17 +150,19 @@ func GetFreeIp() net.IP {
 	return net.IPv4(bytes[3], bytes[2], bytes[1], bytes[0])
 }
 
-func (p *prizeservice.PrizesService) setFirstOrder() {
+func serviceCreateOrder(p *service.PrizesService) {
 	p.State = "running"
 	p.CreatedAt = p.DockerSerivce.Meta.CreatedAt
-	timeScale := time.Duration(float64(p.CreateSpec.Amount) / float64(p.CreateSpec.ServicePrice) * time.Hour)
-	p.RemoveAt = p.CreatedAt.Add(timeScale)
-
-	serviceOrder := ServiceOrder{}
+	timeScale := time.Duration(float64(p.CreateSpec.Amount) / float64(p.CreateSpec.ServicePrice) * float64(time.Hour))
+	p.DeleteAt = p.CreatedAt.Add(timeScale)
+	serviceOrder := order.ServiceOrder{}
 	serviceOrder.OutPoint = p.CreateSpec.OutPoint
 	serviceOrder.CreatedAt = p.CreatedAt
-	serviceOrder.RemoveAt = p.RemoveAt
-	serviceOrder.OrderState = "paying"
+	serviceOrder.RemoveAt = p.DeleteAt
+	serviceOrder.OrderState = order.OrderStatePaying
 	serviceOrder.Balance = p.CreateSpec.Amount
+	serviceOrder.ServicePrice = p.CreateSpec.ServicePrice
+	serviceOrder.LastStatementTime = p.CreatedAt
+	serviceOrder.NextStatementTime = p.CreatedAt.Add(order.DefaultStatementOptions.StatementDuration)
 	p.Order = append(p.Order, serviceOrder)
 }

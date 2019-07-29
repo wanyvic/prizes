@@ -1,16 +1,18 @@
-package prizeservice
+package service
 
 import (
 	"time"
 
 	"github.com/docker/docker/api/types/swarm"
+	"github.com/wanyvic/prizes/api/types/order"
 )
 
 type PrizesService struct {
 	DockerSerivce swarm.Service
 	CreateSpec    ServiceCreate
-	Order         []ServiceOrder
-	Record        []Statement
+	UpdateSpec    []ServiceUpdate
+	Order         []order.ServiceOrder
+	Record        []order.Statement
 	State         string
 	CreatedAt     time.Time
 	DeleteAt      time.Time

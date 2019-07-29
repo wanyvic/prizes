@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/docker/docker/api/types/swarm"
+	"github.com/wanyvic/prizes/api/types/service"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -93,6 +94,19 @@ func (m *MongDBClient) UpdateServiceOne(service swarm.Service) (bool, error) {
 	}
 	return true, nil
 }
+func (m *MongDBClient) UpdatePrizesServiceOne(service service.PrizesService) (bool, error) {
+	if err := m.RefreshMongoDBConnection(); err != nil {
+		return false, err
+	}
+	updateOption := options.UpdateOptions{}
+	updateOption.SetUpsert(true)
+	collection := m.mongoDBReader.Database(m.DataBase).Collection("service")
+	_, err := collection.UpdateOne(context.Background(), bson.D{{"id", service.DockerSerivce.ID}}, bson.D{{"$set", service}}, &updateOption)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
 func (m *MongDBClient) UpdateTaskOne(task swarm.Task) (bool, error) {
 	if err := m.RefreshMongoDBConnection(); err != nil {
 		return false, err
@@ -130,6 +144,19 @@ func (m *MongDBClient) FindServiceOne(serviceID string) (*swarm.Service, error) 
 		return nil, err
 	}
 	return &service, nil
+}
+
+func (m *MongDBClient) FindPrizesServiceOne(serviceID string) (*service.PrizesService, error) {
+	var prizeService service.PrizesService
+	if err := m.RefreshMongoDBConnection(); err != nil {
+		return nil, err
+	}
+	collection := m.mongoDBReader.Database(m.DataBase).Collection("service")
+
+	if err := collection.FindOne(context.Background(), bson.D{{"id", serviceID}}).Decode(&prizeService); err != nil {
+		return nil, err
+	}
+	return &prizeService, nil
 }
 func (m *MongDBClient) FindTaskList(serviceID string) (*[]swarm.Task, error) {
 	var tasklist []swarm.Task

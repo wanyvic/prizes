@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/wanyvic/prizes/api"
 	"github.com/wanyvic/prizes/cmd"
+	"github.com/wanyvic/prizes/cmd/db"
 )
 
 func parseVersion(strVersion string) error {
@@ -34,15 +35,19 @@ func CreateService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	serviceSpec := swarm.ServiceSpec{}
-	if err := json.Unmarshal(body, &serviceSpec); err != nil {
+	serviceCreate := prizeservice.ServiceCreate{}
+	if err := json.Unmarshal(body, &serviceCreate); err != nil {
 		fmt.Fprintf(w, "bad parameters")
 		return
 	}
-	response, err := cmd.CreateService(serviceSpec, types.ServiceCreateOptions{})
+	response, err := cmd.ServiceCreate(&serviceCreate)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
+	}
+	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
+	if err != nil {
+		return nil, err
 	}
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
@@ -64,7 +69,7 @@ func UpdateService(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "bad parameters")
 		return
 	}
-	response, err := cmd.UpdateService(serviceID, serviceSpec, types.ServiceUpdateOptions{})
+	response, err := cmd.ServiceUpdate(serviceID, serviceSpec, types.ServiceUpdateOptions{})
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return

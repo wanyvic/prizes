@@ -1,4 +1,4 @@
-package refresh
+package calculagraph
 
 import (
 	"container/heap"
@@ -8,7 +8,7 @@ import (
 )
 
 func Test_service_check(t *testing.T) {
-	h := &ServiceLoop{}
+	h := &ServiceCalculagraph{}
 	heap.Init(h)
 
 	item1 := CheckItem{ServiceID: "1", RemoveAt: time.Date(2018, 1, 2, 15, 30, 10, 0, time.Local)}

@@ -1,4 +1,4 @@
-package prizeservice
+package service
 
 import (
 	prizestypes "github.com/wanyvic/prizes/api/types"

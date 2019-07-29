@@ -1,4 +1,4 @@
-package prizeservice
+package service
 
 type ServiceUpdate struct {
 	ServiceID    string `json:"service_id,omitempty"`

@@ -65,25 +65,25 @@ func GetNodeList() (*prizestypes.NodeListStatistics, error) {
 			nodeListStatistics.AvailabilityCount++
 		}
 		if status[node.ID] == 0 {
-			nodeListStatistics.List = append(nodeListStatistics.List, preaseNodeInfo(&node, false))
+			nodeListStatistics.List = append(nodeListStatistics.List, parseNodeInfo(&node, false))
 			nodeListStatistics.UsableCount++
 		} else {
-			nodeListStatistics.List = append(nodeListStatistics.List, preaseNodeInfo(&node, true))
+			nodeListStatistics.List = append(nodeListStatistics.List, parseNodeInfo(&node, true))
 		}
 	}
 	return &nodeListStatistics, nil
 }
-func preaseNodeInfo(node *swarm.Node, OnWorking bool) (ref prizestypes.NodeInfo) {
+func parseNodeInfo(node *swarm.Node, OnWorking bool) (ref prizestypes.NodeInfo) {
 	ref.NodeID = node.ID
 	ref.Labels = node.Description.Engine.Labels
 	ref.NodeState = string(node.Status.State)
 	ref.ReachAddress = node.Description.Engine.Labels["REVENUE_ADDRESS"]
 	ref.CPUType = node.Description.Engine.Labels["CPUNAME"]
-	ref.CPUThread, _ = strconv.Atoi(node.Description.Engine.Labels["CPUCOUNT"])
+	ref.CPUThread, _ = strconv.ParseInt(node.Description.Engine.Labels["CPUCOUNT"], 10, 64)
 	ref.MemoryType = node.Description.Engine.Labels["MEMNAME"]
-	ref.MemoryCount, _ = strconv.Atoi(node.Description.Engine.Labels["MEMCOUNT"])
+	ref.MemoryCount, _ = strconv.ParseInt(node.Description.Engine.Labels["MEMCOUNT"], 10, 64)
 	ref.GPUType = node.Description.Engine.Labels["GPUNAME"]
-	ref.GPUCount, _ = strconv.Atoi(node.Description.Engine.Labels["GPUCOUNT"])
+	ref.GPUCount, _ = strconv.ParseInt(node.Description.Engine.Labels["GPUCOUNT"], 10, 64)
 	ref.PersistentStore = node.Description.Engine.Labels["NFSIP"]
 	ref.OnWorking = OnWorking
 	return ref

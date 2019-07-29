@@ -1,59 +1,77 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
-	"crypto/rand"
 	"fmt"
-	"math/big"
-	mathRand "math/rand"
-	"net"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/sirupsen/logrus"
-	prizestypes "github.com/wanyvic/prizes/api/types"
+	"github.com/wanyvic/prizes/api/types/order"
+	"github.com/wanyvic/prizes/api/types/service"
 	"github.com/wanyvic/prizes/cmd/db"
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
+	"github.com/wanyvic/prizes/cmd/prizesd/prizeservice"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
+	"github.com/wanyvic/prizes/cmd/prizesd/refresh/calculagraph"
 )
 
-var (
-	DefaultDockerImage = "massgrid/10.0-base-ubuntu16.04"
-)
-
-func CreateService(serviceCreate prizestypes.ServiceCreate, options types.ServiceCreateOptions) (*types.ServiceCreateResponse, error) {
-	
+func ServiceCreate(serviceCreate *service.ServiceCreate) (*types.ServiceCreateResponse, error) {
+	logrus.Info("request ServiceCreate")
+	prizeService, response, err := prizeservice.Create(serviceCreate)
+	if err != nil {
+		return nil, err
+	}
+	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
+	if err != nil {
+		return nil, err
+	}
+	calculagraph.Push(prizeService.DockerSerivce.ID, prizeService.Order[0].NextStatementTime)
+	return response, nil
 }
-func UpdateService(serviceUpdate prizestypes.ServiceUpdate, options types.ServiceUpdateOptions) (*types.ServiceUpdateResponse, error) {
-	logrus.Info("request UpdateService: ", serviceUpdate.ServiceID)
-	cli, err := dockerapi.GetDockerClient()
-	if err != nil {
-		return nil, err
-	}
-	service, _, err := cli.ServiceInspectWithRaw(context.Background(), serviceUpdate.ServiceID, types.ServiceInspectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	serviceSpec := preaseServiceUpdateSpec(&service, &serviceUpdate)
-	response, err := cli.ServiceUpdate(context.Background(), service.ID, service.Version, *serviceSpec, types.ServiceUpdateOptions{})
-	if err != nil {
-		return nil, err
-	}
+func ServiceUpdate(serviceUpdate *service.ServiceUpdate, options types.ServiceUpdateOptions) (*types.ServiceUpdateResponse, error) {
+	logrus.Info("request ServiceUpdate: ", serviceUpdate.ServiceID)
 
-	serviceOrder := preaseUpdateServiceOrder(&serviceUpdate, &response)
-	_, err = db.DBimplement.UpdateServiceOrderOne(*serviceOrder)
+	prizeService, err := db.DBimplement.FindPrizesServiceOne(serviceUpdate.ServiceID)
 	if err != nil {
 		return nil, err
 	}
-	logrus.Info(fmt.Sprintf("UpdateService completed: ID: %s ,Warning: %s", serviceUpdate.ServiceID, response.Warnings))
-	return &response, nil
+	response, err := prizeservice.Update(prizeService, serviceUpdate)
+	if err != nil {
+		return nil, err
+	}
+	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
+	if err != nil {
+		return nil, err
+	}
+	calculagraph.ChangeServiceRemoveTime(prizeService.DockerSerivce.ID, prizeService.DeleteAt)
+	return response, nil
 }
+func serviceSate() {
 
+}
+func ServiceStatement(ServiceID string, statementAt time.Time) error {
+	logrus.Info("request ServiceStatement: ", ServiceID)
+	prizeService, err := db.DBimplement.FindPrizesServiceOne(ServiceID)
+	if err != nil {
+		return err
+	}
+	serviceStatistics, err := ServiceState(ServiceID)
+	if err != nil {
+		return err
+	}
+	_, err = prizeservice.Statement(prizeService, serviceStatistics, statementAt, order.DefaultStatementOptions)
+	if err != nil {
+		return err
+	}
+	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
+	if err != nil {
+		return err
+	}
+	calculagraph.ChangeServiceRemoveTime(prizeService.DockerSerivce.ID, prizeService.DeleteAt)
+	return nil
+}
 func ServiceRemove(serviceID string) error {
 	logrus.Info("request RemoveService: ", serviceID)
 	cli, err := dockerapi.GetDockerClient()
@@ -71,6 +89,7 @@ func ServiceRemove(serviceID string) error {
 	logrus.Info(fmt.Sprintf("RemoveService completed: ID: %s", serviceID))
 	return nil
 }
+
 func Service(serviceID string) (*swarm.Service, error) {
 	logrus.Info("request ServiceInfo: ", serviceID)
 	service, err := db.DBimplement.FindServiceOne(serviceID)
@@ -87,4 +106,3 @@ func TasksInfo(serviceID string) (*[]swarm.Task, error) {
 	}
 	return taskList, nil
 }
-
