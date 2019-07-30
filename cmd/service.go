@@ -18,7 +18,6 @@ import (
 )
 
 func ServiceCreate(serviceCreate *service.ServiceCreate) (*types.ServiceCreateResponse, error) {
-	logrus.Info("request ServiceCreate")
 	prizeService, response, err := prizeservice.Create(serviceCreate)
 	if err != nil {
 		return nil, err
@@ -27,12 +26,10 @@ func ServiceCreate(serviceCreate *service.ServiceCreate) (*types.ServiceCreateRe
 	if err != nil {
 		return nil, err
 	}
-	calculagraph.Push(prizeService.DockerSerivce.ID, prizeService.Order[0].NextStatementTime)
+	calculagraph.Push(prizeService.DockerSerivce.ID, prizeService.NextCheckTime)
 	return response, nil
 }
-func ServiceUpdate(serviceUpdate *service.ServiceUpdate, options types.ServiceUpdateOptions) (*types.ServiceUpdateResponse, error) {
-	logrus.Info("request ServiceUpdate: ", serviceUpdate.ServiceID)
-
+func ServiceUpdate(serviceUpdate *service.ServiceUpdate) (*types.ServiceUpdateResponse, error) {
 	prizeService, err := db.DBimplement.FindPrizesServiceOne(serviceUpdate.ServiceID)
 	if err != nil {
 		return nil, err
@@ -45,35 +42,64 @@ func ServiceUpdate(serviceUpdate *service.ServiceUpdate, options types.ServiceUp
 	if err != nil {
 		return nil, err
 	}
-	calculagraph.ChangeServiceRemoveTime(prizeService.DockerSerivce.ID, prizeService.DeleteAt)
+	calculagraph.ChangeCheckTime(prizeService.DockerSerivce.ID, prizeService.NextCheckTime)
 	return response, nil
 }
-func serviceSate() {
-
-}
-func ServiceStatement(ServiceID string, statementAt time.Time) error {
-	logrus.Info("request ServiceStatement: ", ServiceID)
+func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement, error) {
 	prizeService, err := db.DBimplement.FindPrizesServiceOne(ServiceID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	serviceStatistics, err := ServiceState(ServiceID)
+	serviceStatistics, err := ServiceState(ServiceID, statementAt)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = prizeservice.Statement(prizeService, serviceStatistics, statementAt, order.DefaultStatementOptions)
+	statement, serviceState, err := prizeservice.Statement(prizeService, serviceStatistics, statementAt, order.DefaultStatementOptions)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService) //获取下次 结算时间
+	if err != nil {
+		return nil, err
+	}
+	if serviceState == service.ServiceStateRunning {
+		calculagraph.ChangeCheckTime(prizeService.DockerSerivce.ID, prizeService.NextCheckTime)
+	} else if serviceState == service.ServiceStateCompleted {
+		err := serviceRemove(ServiceID)
+		calculagraph.RemoveService(ServiceID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	logrus.Info(fmt.Sprintf("%+v", *statement))
+	return statement, nil
+}
+func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
+	var err error
+	refundInfo := order.RefundInfo{}
+	refundInfo.Statement, err = ServiceStatement(ServiceID, time.Now().UTC())
+	if err != nil {
+		return nil, err
+	}
+	prizeService, err := db.DBimplement.FindPrizesServiceOne(ServiceID)
+	if err != nil {
+		return nil, err
+	}
+	refundInfo.RefundPay = prizeservice.Refund(prizeService)
+	err = serviceRemove(ServiceID)
+	if err != nil {
+		return nil, err
 	}
 	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	calculagraph.ChangeServiceRemoveTime(prizeService.DockerSerivce.ID, prizeService.DeleteAt)
-	return nil
+	calculagraph.RemoveService(ServiceID)
+
+	logrus.Info(fmt.Sprintf("%+v", refundInfo))
+	return &refundInfo, nil
 }
-func ServiceRemove(serviceID string) error {
-	logrus.Info("request RemoveService: ", serviceID)
+func serviceRemove(serviceID string) error {
 	cli, err := dockerapi.GetDockerClient()
 	if err != nil {
 		return err
@@ -98,11 +124,6 @@ func Service(serviceID string) (*swarm.Service, error) {
 	}
 	return service, nil
 }
-func TasksInfo(serviceID string) (*[]swarm.Task, error) {
-	logrus.Info("request TasksInfo: ", serviceID)
-	taskList, err := db.DBimplement.FindTaskList(serviceID)
-	if err != nil {
-		return nil, err
-	}
-	return taskList, nil
+func GetServiceFromPubkey(pubkey string) {
+
 }

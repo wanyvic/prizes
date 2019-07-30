@@ -13,8 +13,8 @@ import (
 
 //	根据ServiceID 去数据库中获取 所有task 状态、用时、地址等信息
 //
-func ServiceState(serviceID string) (types.ServiceStatistics, error) {
-	logrus.Info("ServiceState: ", serviceID)
+func ServiceState(serviceID string, statementAt time.Time) (types.ServiceStatistics, error) {
+	logrus.Debug("ServiceState: ", serviceID)
 	var serviceStatistics types.ServiceStatistics
 	service, err := db.DBimplement.FindServiceOne(serviceID)
 	if err != nil {
@@ -25,21 +25,14 @@ func ServiceState(serviceID string) (types.ServiceStatistics, error) {
 		return serviceStatistics, err
 	}
 	serviceStatistics.ServiceID = serviceID
-	serviceStatistics.CreatedAt = service.CreatedAt
+	serviceStatistics.CreatedAt = service.Meta.CreatedAt
 	var taskStatistics []types.TaskStatistics
-	var td time.Duration
-	latestTime := time.Unix(0, 0).UTC()
 
-	logrus.Info("taskID", "nodeID", "CreatedAt", "RemoveAt", "useTime", "state", "Address")
 	for _, task := range *taskList {
 		removeTime := task.Status.Timestamp
 		if task.DesiredState != swarm.TaskStateShutdown {
-			removeTime = time.Unix(0, 0).UTC()
-
-			serviceStatistics.State = "running"
-		}
-		if task.Status.Timestamp.After(latestTime) {
-			latestTime = task.Status.Timestamp
+			removeTime = statementAt
+			serviceStatistics.State = swarm.TaskStateRunning
 		}
 		var strAddr string
 		p_Addr, _ := getAddress(task.NodeID)
@@ -58,12 +51,10 @@ func ServiceState(serviceID string) (types.ServiceStatistics, error) {
 				Err:            task.Status.Err,
 				DesiredState:   task.DesiredState,
 			})
-		fmt.Println(task.ID, task.NodeID, task.Meta.CreatedAt, removeTime, task.Status.Timestamp.Sub(task.CreatedAt), task.DesiredState, strAddr)
-		td += task.Status.Timestamp.Sub(task.CreatedAt)
+		logrus.Debug(fmt.Sprintf("%s %s %s %s %s %s %s ", task.ID, task.NodeID, task.Meta.CreatedAt, removeTime, removeTime.Sub(task.CreatedAt), task.DesiredState, strAddr))
 	}
+	logrus.Info(fmt.Sprintf("serviceStatistics %s CreatedAt %s usetime %s state %s", serviceID, serviceStatistics.CreatedAt, statementAt.Sub(serviceStatistics.CreatedAt), serviceStatistics.State))
 	serviceStatistics.TaskList = taskStatistics
-
-	logrus.Info("ervice total time: ", td)
 	return serviceStatistics, nil
 }
 func getAddress(nodeID string) (*string, error) {

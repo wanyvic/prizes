@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/wanyvic/prizes/cmd/prizesd/config"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
+	"github.com/wanyvic/prizes/cmd/prizesd/refresh/calculagraph"
 	httpserver "github.com/wanyvic/prizes/cmd/prizesd/server"
 )
 
@@ -99,11 +100,16 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	}
 
 	logrus.Info("Starting up")
+	logrus.Info("data refresh time duration: ", refresh.TimeScale)
 	if err := configureServer(opts.Hosts); err != nil {
 		logrus.Warning(err)
 	}
 	loop := refresh.NewRefreshMoudle()
-	if err := loop.WhileLoop(); err != nil {
+	loop.Start()
+	if err := calculagraph.InitCalculagraph(); err != nil {
+		logrus.Warning(err)
+	}
+	if err := CheckCalculagraph(); err != nil {
 		logrus.Warning(err)
 	}
 	return nil

@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	DefaultStatementOptions = StatementOptions{StatementDuration: 24 * time.Hour}
+	DefaultStatementOptions = StatementOptions{StatementDuration: time.Duration(1 * time.Minute), MasterNodeFeeAddress: "masternodeaddr", DevFeeAddress: "DevFeeAddress", MasterNodeFeeRate: 100, DevFeeRate: 100}
 )
 
 type ServiceOrder struct {
@@ -20,10 +20,19 @@ type ServiceOrder struct {
 	ServicePrice      int64 `json:"service_price,omitempty"`
 	Statement         []Statement
 	LastStatementTime time.Time
-	NextStatementTime time.Time
 	Balance           int64
+	Refund            *RefundPayment
 }
-
+type RefundInfo struct {
+	RefundPay *[]RefundPayment
+	Statement *Statement
+}
+type RefundPayment struct {
+	RefundID    string    `json:"refund_id,omitempty"`
+	CreatedAt   time.Time `json:"created_at,omitempty"`
+	TotalAmount int64     `json:"total_amount,omitempty"`
+	Drawee      string    `json:"drawee,omitempty"`
+}
 type Statement struct {
 	StatementID          string    `json:"statement_id,omitempty"`
 	CreatedAt            time.Time `json:"created_at,omitempty"`
@@ -63,4 +72,6 @@ const (
 	OrderStatePaying OrderState = "paying"
 	// NodeStateDisconnected DISCONNECTED
 	OrderStateHasBeenPaid OrderState = "paid"
+
+	OrderStateHasBeenRefund OrderState = "refund"
 )

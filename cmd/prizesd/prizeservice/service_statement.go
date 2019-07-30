@@ -1,11 +1,11 @@
 package prizeservice
 
 import (
-	"bytes"
-	"crypto/rand"
-	"math/big"
+	"errors"
 	"strconv"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/docker/docker/api/types/swarm"
 	prizestypes "github.com/wanyvic/prizes/api/types"
@@ -13,19 +13,38 @@ import (
 	"github.com/wanyvic/prizes/api/types/service"
 )
 
-func Statement(prizeService *service.PrizesService, serviceStatistics prizestypes.ServiceStatistics, desiredTime time.Time, options order.StatementOptions) (*order.Statement, error) {
+func Statement(prizeService *service.PrizesService, serviceStatistics prizestypes.ServiceStatistics, desiredTime time.Time, options order.StatementOptions) (*order.Statement, service.ServiceState, error) {
 	var statement *order.Statement
 	for i := 0; i < len(prizeService.Order); i++ {
 		if prizeService.Order[i].OrderState == order.OrderStatePaying {
-			statement = statementOrder(&prizeService.Order[i], &serviceStatistics, desiredTime, &options)
-			break
+			statement := statementOrder(&prizeService.Order[i], &serviceStatistics, desiredTime, &options)
+			if prizeService.Order[i].OrderState == order.OrderStateHasBeenPaid {
+				if i == len(prizeService.Order)-1 {
+					prizeService.State = service.ServiceStateCompleted
+				} else {
+					prizeService.Order[i+1].OrderState = order.OrderStatePaying
+					prizeService.Order[i+1].LastStatementTime = prizeService.Order[i].LastStatementTime
+					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(options.StatementDuration)
+					if prizeService.NextCheckTime.After(prizeService.Order[i+1].RemoveAt) {
+						prizeService.NextCheckTime = prizeService.Order[i+1].RemoveAt
+					}
+				}
+			} else {
+				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(options.StatementDuration)
+				if prizeService.NextCheckTime.After(prizeService.Order[i].RemoveAt) {
+					prizeService.NextCheckTime = prizeService.Order[i].RemoveAt
+				}
+			}
+			return statement, prizeService.State, nil
 		}
 	}
-	return statement, nil
+	return statement, prizeService.State, errors.New("no order or no order state paying")
 }
 func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizestypes.ServiceStatistics, desiredTime time.Time, options *order.StatementOptions) *order.Statement {
 	taskStatisticsColation := []prizestypes.TaskStatistics{}
 	statementAt := desiredTime
+	var statementInfo *order.Statement
+	amount := int64(0)
 	for _, taskStatistics := range serviceStatistics.TaskList {
 		if taskStatistics.State == swarm.TaskStateRunning {
 			taskStatisticsColation = append(taskStatisticsColation, taskStatistics)
@@ -33,21 +52,29 @@ func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizest
 			taskStatisticsColation = append(taskStatisticsColation, taskStatistics)
 		}
 	}
-	balanceUsableTime := time.Duration(float64(serviceOrder.Balance)/float64(serviceOrder.ServicePrice)) * time.Hour
-	if balanceUsableTime < desiredTime.Sub(serviceOrder.LastStatementTime) { //不够结算
+	balanceUsableTime := time.Duration(float64(serviceOrder.Balance) / float64(serviceOrder.ServicePrice) * float64(time.Hour))
+
+	logrus.Debug("statement", balanceUsableTime, desiredTime.Sub(serviceOrder.LastStatementTime))
+	if balanceUsableTime <= desiredTime.Sub(serviceOrder.LastStatementTime) { //不够结算
 		statementAt = serviceOrder.LastStatementTime.Add(balanceUsableTime)
 		serviceOrder.OrderState = order.OrderStateHasBeenPaid
+		amount = serviceOrder.Balance
+		statementInfo = parseStatement(taskStatisticsColation, serviceOrder.LastStatementTime, statementAt, amount, options)
+	} else {
+		logrus.Debug("not latest statement")
+		amount = int64(statementAt.Sub(serviceOrder.LastStatementTime).Hours() * float64(serviceOrder.ServicePrice))
+		statementInfo = parseStatement(taskStatisticsColation, serviceOrder.LastStatementTime, statementAt, amount, options)
 	}
-	statementInfo := parseStatement(taskStatisticsColation, serviceOrder.LastStatementTime, statementAt, serviceOrder.Balance, options)
 	serviceOrder.Statement = append(serviceOrder.Statement, *statementInfo)
 	serviceOrder.LastStatementTime = statementAt
-	serviceOrder.NextStatementTime = statementAt.Add(options.StatementDuration)
+	serviceOrder.Balance -= amount
 	return statementInfo
 }
+
 func parseStatement(taskStatisticsColation []prizestypes.TaskStatistics, statementStartAt time.Time, statementEndAt time.Time, amount int64, options *order.StatementOptions) *order.Statement {
 
 	statement := order.Statement{}
-	statement.StatementID = strconv.FormatInt(time.Now().UTC().Unix(), 10) + CreateRandomNumberString(6)
+	statement.StatementID = strconv.FormatInt(time.Now().UTC().Unix(), 10) + service.DefaultStatementID + CreateRandomNumberString(8)
 	statement.CreatedAt = time.Now().UTC()
 	statement.StatementStartAt = statementStartAt
 	statement.StatementEndAt = statementEndAt
@@ -77,7 +104,7 @@ func parseStatement(taskStatisticsColation []prizestypes.TaskStatistics, stateme
 			taskInfo.RemoveAt = statementEndAt
 		}
 		useTime := time.Duration(taskInfo.RemoveAt.Sub(taskInfo.CreatedAt))
-		taskAmount := int64(float64(amount) * useTime.Hours() / TotalUseTime.Hours())
+		taskAmount := int64(float64(amount)*useTime.Hours()/TotalUseTime.Hours() + 0.5)
 		var msg string
 		if taskInfo.ReceiveAddress == "" {
 			taskInfo.ReceiveAddress = statement.MasterNodeFeeAddress
@@ -91,16 +118,4 @@ func parseStatement(taskStatisticsColation []prizestypes.TaskStatistics, stateme
 		statement.Payments = append(statement.Payments, masterNodePayment)
 	}
 	return &statement
-}
-func CreateRandomNumberString(len int) string {
-	var container string
-	var str = "1234567890"
-	b := bytes.NewBufferString(str)
-	length := b.Len()
-	bigInt := big.NewInt(int64(length))
-	for i := 0; i < len; i++ {
-		randomInt, _ := rand.Int(rand.Reader, bigInt)
-		container += string(str[randomInt.Int64()])
-	}
-	return container
 }

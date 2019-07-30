@@ -88,7 +88,7 @@ func (m *MongDBClient) UpdateServiceOne(service swarm.Service) (bool, error) {
 	updateOption := options.UpdateOptions{}
 	updateOption.SetUpsert(true)
 	collection := m.mongoDBReader.Database(m.DataBase).Collection("service")
-	_, err := collection.UpdateOne(context.Background(), bson.D{{"id", service.ID}}, bson.D{{"$set", service}}, &updateOption)
+	_, err := collection.UpdateOne(context.Background(), bson.D{{"id", service.ID}}, bson.M{"$set": bson.M{"dockerservice": service}}, &updateOption)
 	if err != nil {
 		return false, err
 	}

@@ -27,7 +27,7 @@ func Update(prizeService *service.PrizesService, serviceUpdate *service.ServiceU
 	if err != nil {
 		return nil, err
 	}
-	serviceUpdateOrder(prizeService)
+	serviceUpdateOrder(prizeService, serviceUpdate)
 
 	logrus.Info(fmt.Sprintf("CreateService completed: ID: %s ,Warning: %s", serviceUpdate.ServiceID, response.Warnings))
 	return &response, nil
@@ -43,18 +43,16 @@ func parseServiceUpdateSpec(service *swarm.Service, serviceUpdate *service.Servi
 	spec.Labels["com.massgrid.outpoint."+strconv.Itoa(num)+"."+serviceUpdate.OutPoint] = strconv.FormatBool(false)
 	return &service.Spec
 }
-func serviceUpdateOrder(p *service.PrizesService) {
-	timeScale := time.Duration(float64(p.CreateSpec.Amount) / float64(p.CreateSpec.ServicePrice) * float64(time.Hour))
+func serviceUpdateOrder(p *service.PrizesService, serviceUpdate *service.ServiceUpdate) {
+	serviceOrder := order.ServiceOrder{}
+	serviceOrder.OutPoint = serviceUpdate.OutPoint
+	serviceOrder.CreatedAt = p.DeleteAt
+	serviceOrder.Drawee = serviceUpdate.Drawee
+	timeScale := time.Duration(float64(serviceUpdate.Amount) / float64(serviceUpdate.ServicePrice) * float64(time.Hour))
 	p.DeleteAt = p.DeleteAt.Add(timeScale)
 
-	lastServiceOrder := p.Order[len(p.Order)-1]
-	updateSpec := p.UpdateSpec[len(p.UpdateSpec)-1]
-
-	serviceOrder := order.ServiceOrder{}
-	serviceOrder.OutPoint = p.CreateSpec.OutPoint
-	serviceOrder.CreatedAt = lastServiceOrder.RemoveAt
 	serviceOrder.RemoveAt = p.DeleteAt
 	serviceOrder.OrderState = order.OrderStateWaitToPay
-	serviceOrder.Balance = updateSpec.Amount
+	serviceOrder.Balance = serviceUpdate.Amount
 	p.Order = append(p.Order, serviceOrder)
 }

@@ -100,13 +100,12 @@ func (u *Server) Stop() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("REQ: ", r.URL)
+	logrus.Info(fmt.Sprintf("http request %s", r.URL))
 	splitArray := strings.Split(r.URL.String(), "/")
 	if len(splitArray) == 0 {
 		fmt.Fprintf(w, "need parameters")
 		return
 	}
-
 	if strings.ToUpper(splitArray[1][0:1]) == "V" {
 		if err := parseVersion(splitArray[1][1:]); err != nil {
 			fmt.Fprintf(w, err.Error())
@@ -115,11 +114,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case strings.Contains(strings.ToLower(r.URL.String()), "servicecreate"):
-		CreateService(w, r)
+		ServiceCreate(w, r)
 	case strings.Contains(strings.ToLower(r.URL.String()), "serviceupdate"):
-		UpdateService(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "servicedelete"):
-		RemoveService(w, r)
+		ServiceUpdate(w, r)
+	case strings.Contains(strings.ToLower(r.URL.String()), "servicestatement"):
+		ServiceStatement(w, r)
+	case strings.Contains(strings.ToLower(r.URL.String()), "servicerefund"):
+		ServiceRefund(w, r)
 	case strings.Contains(strings.ToLower(r.URL.String()), "getservice"):
 		GetService(w, r)
 	case strings.Contains(strings.ToLower(r.URL.String()), "gettaskinfo"):

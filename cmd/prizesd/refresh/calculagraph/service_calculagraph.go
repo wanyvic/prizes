@@ -8,6 +8,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/sirupsen/logrus"
+	"github.com/wanyvic/prizes/cmd/db"
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 )
 
@@ -18,13 +19,13 @@ var (
 
 type CheckItem struct {
 	ServiceID string `json:"service_id,omitempty"`
-	RemoveAt  time.Time
+	CheckAt   time.Time
 }
 type ServiceCalculagraph []CheckItem
 
 func (h ServiceCalculagraph) Len() int { return len(h) }
 
-func (h ServiceCalculagraph) Less(i, j int) bool { return h[i].RemoveAt.Before(h[j].RemoveAt) }
+func (h ServiceCalculagraph) Less(i, j int) bool { return h[i].CheckAt.Before(h[j].CheckAt) }
 func (h ServiceCalculagraph) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 func (h *ServiceCalculagraph) Push(x interface{}) {
 	item := x.(*CheckItem)
@@ -40,6 +41,7 @@ func (h *ServiceCalculagraph) Pop() interface{} {
 }
 
 func InitCalculagraph() error {
+	logrus.Debug("InitCalculagraph")
 	cli, err := dockerapi.GetDockerClient()
 	if err != nil {
 		return err
@@ -48,22 +50,43 @@ func InitCalculagraph() error {
 	if err != nil {
 		return err
 	}
-
 	heap.Init(&PrioritySequence)
 	for _, service := range servicelist {
-		removeAt, _ := time.Parse("2006-01-02 15:04:05", service.Spec.Labels["com.massgrid.deletetime"])
-		item := CheckItem{ServiceID: service.ID, RemoveAt: removeAt}
-		heap.Push(&PrioritySequence, &item)
+		if prizeService, err := db.DBimplement.FindPrizesServiceOne(service.ID); err == nil {
+			if prizeService.NextCheckTime.After(time.Unix(0, 0).UTC()) {
+				item := CheckItem{ServiceID: service.ID, CheckAt: prizeService.NextCheckTime}
+				heap.Push(&PrioritySequence, &item)
+				logrus.Info("InitCalculagraph push one ", service.ID, " ", item.CheckAt)
+			}
+		}
 	}
 	return nil
 }
-func ChangeServiceRemoveTime(ServiceID string, newTime time.Time) {
+func ChangeCheckTime(ServiceID string, newTime time.Time) {
 	Lck.Lock()
 	defer Lck.Unlock()
-	logrus.Info("ChangeServiceRemoveTime ", ServiceID, " ", newTime)
+	logrus.Info("ChangeCheckTime ", ServiceID, " ", newTime)
 	for i := 0; i < len(PrioritySequence); i++ {
 		if PrioritySequence[i].ServiceID == ServiceID {
-			PrioritySequence[i].RemoveAt = newTime
+			PrioritySequence[i].CheckAt = newTime
+			heap.Fix(&PrioritySequence, i)
+			return
+		}
+	}
+	logrus.Info("calculagraph Push ", ServiceID, " ", newTime)
+	heap.Push(&PrioritySequence, &CheckItem{ServiceID, newTime})
+}
+func RemoveService(ServiceID string) {
+	Lck.Lock()
+	defer Lck.Unlock()
+	logrus.Info("RemoveService ", ServiceID)
+	for i := 0; i < len(PrioritySequence); i++ {
+		if PrioritySequence[i].ServiceID == ServiceID {
+			if i == len(PrioritySequence)-1 {
+				PrioritySequence = append(PrioritySequence[:i])
+			} else {
+				PrioritySequence = append(PrioritySequence[:i], PrioritySequence[i+1])
+			}
 			heap.Fix(&PrioritySequence, i)
 			return
 		}
@@ -72,6 +95,12 @@ func ChangeServiceRemoveTime(ServiceID string, newTime time.Time) {
 func Push(ServiceID string, newTime time.Time) {
 	Lck.Lock()
 	defer Lck.Unlock()
-	logrus.Info("Push ", ServiceID, " ", newTime)
-	heap.Push(&PrioritySequence, CheckItem{ServiceID, newTime})
+	logrus.Info("calculagraph Push ", ServiceID, " ", newTime)
+	heap.Push(&PrioritySequence, &CheckItem{ServiceID, newTime})
+}
+func Pop() *CheckItem {
+	Lck.Lock()
+	defer Lck.Unlock()
+	item := heap.Pop(&PrioritySequence).(CheckItem)
+	return &item
 }

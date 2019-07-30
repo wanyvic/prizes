@@ -7,13 +7,12 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/swarm"
 	"github.com/sirupsen/logrus"
 	"github.com/wanyvic/prizes/api"
+	"github.com/wanyvic/prizes/api/types/service"
 	"github.com/wanyvic/prizes/cmd"
-	"github.com/wanyvic/prizes/cmd/db"
 )
 
 func parseVersion(strVersion string) error {
@@ -28,14 +27,15 @@ func parseVersion(strVersion string) error {
 	}
 	return nil
 }
-func CreateService(w http.ResponseWriter, r *http.Request) {
+func ServiceCreate(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Warning("ioutil.ReadAll faild")
 		return
 	}
+	logrus.Debug("body: ", string(body))
 	defer r.Body.Close()
-	serviceCreate := prizeservice.ServiceCreate{}
+	serviceCreate := service.ServiceCreate{}
 	if err := json.Unmarshal(body, &serviceCreate); err != nil {
 		fmt.Fprintf(w, "bad parameters")
 		return
@@ -45,31 +45,33 @@ func CreateService(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, err.Error())
 		return
 	}
-	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
-	if err != nil {
-		return nil, err
-	}
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		fmt.Fprintf(w, "json.Marshal error")
 		return
 	}
+	logrus.Info(fmt.Sprintf("http response ID: %s ,Warning: %s", response.ID, response.Warnings))
 	fmt.Fprintf(w, string(jsonResponse))
 }
-func UpdateService(w http.ResponseWriter, r *http.Request) {
+func ServiceUpdate(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	serviceSpec := swarm.ServiceSpec{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Warning("ioutil.ReadAll faild")
 		return
 	}
+	logrus.Debug("body: ", string(body))
 	defer r.Body.Close()
-	if err := json.Unmarshal(body, &serviceSpec); err != nil {
+	serviceUpdate := service.ServiceUpdate{}
+	if err := json.Unmarshal(body, &serviceUpdate); err != nil {
 		fmt.Fprintf(w, "bad parameters")
 		return
 	}
-	response, err := cmd.ServiceUpdate(serviceID, serviceSpec, types.ServiceUpdateOptions{})
+	if serviceID != serviceUpdate.ServiceID {
+		fmt.Fprintf(w, "serviceID mismatch "+serviceID+" "+serviceUpdate.ServiceID)
+		return
+	}
+	response, err := cmd.ServiceUpdate(&serviceUpdate)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
@@ -79,16 +81,36 @@ func UpdateService(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "json.Marshal error")
 		return
 	}
+	logrus.Info(fmt.Sprintf("http response ID: %s ,Warning: %s", serviceID, response.Warnings))
 	fmt.Fprintf(w, string(jsonResponse))
 }
-func RemoveService(w http.ResponseWriter, r *http.Request) {
+func ServiceStatement(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	err := cmd.RemoveService(serviceID)
+	statement, err := cmd.ServiceStatement(serviceID, time.Now().UTC())
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
 	}
-	fmt.Fprintf(w, "ServiceRemove Successed")
+	jsonResponse, err := json.Marshal(*statement)
+	if err != nil {
+		fmt.Fprintf(w, "json.Marshal error")
+		return
+	}
+	fmt.Fprintf(w, string(jsonResponse))
+}
+func ServiceRefund(w http.ResponseWriter, r *http.Request) {
+	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
+	refunInfo, err := cmd.ServiceRefund(serviceID)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+		return
+	}
+	jsonResponse, err := json.Marshal(*refunInfo)
+	if err != nil {
+		fmt.Fprintf(w, "json.Marshal error")
+		return
+	}
+	fmt.Fprintf(w, string(jsonResponse))
 }
 func GetService(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
@@ -147,7 +169,7 @@ func GetNodeList(w http.ResponseWriter, r *http.Request) {
 }
 func GetServiceState(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	serviceStatistics, err := cmd.ServiceState(serviceID)
+	serviceStatistics, err := cmd.ServiceState(serviceID, time.Now().UTC())
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return

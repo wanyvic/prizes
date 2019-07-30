@@ -11,9 +11,9 @@ type ServiceStatistics struct {
 	CreatedAt time.Time `json:"create_at,omitempty"`
 	RemoveAt  time.Time `json:"remove_at,omitempty"`
 
-	State   string  `json:"state,omitempty"`
-	Price   int64   `json:"price,omitempty"`
-	FeeRate float64 `json:"fee_rate,omitempty"`
+	State   swarm.TaskState `json:"state,omitempty"`
+	Price   int64           `json:"price,omitempty"`
+	FeeRate float64         `json:"fee_rate,omitempty"`
 	Hardware
 	TaskList []TaskStatistics `json:"tasklist,omitempty"`
 }

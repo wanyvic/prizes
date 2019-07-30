@@ -7,4 +7,5 @@ type ServiceUpdate struct {
 	BlockHeight  int64  `json:"block_height,omitempty"`
 	ServicePrice int64  `json:"service_price,omitempty"`
 	OutPoint     string `json:"out_point,omitempty"`
+	Drawee       string `json:"drawee,omitempty"`
 }
