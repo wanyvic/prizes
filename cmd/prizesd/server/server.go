@@ -106,36 +106,39 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "need parameters")
 		return
 	}
+	cmdIndex := 1
 	if strings.ToUpper(splitArray[1][0:1]) == "V" {
+		if len(splitArray) > 2 {
+			cmdIndex += 1
+		}
 		if err := parseVersion(splitArray[1][1:]); err != nil {
 			fmt.Fprintf(w, err.Error())
 			return
 		}
 	}
 	switch {
-	case strings.Contains(strings.ToLower(r.URL.String()), "servicecreate"):
+	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "servicecreate") == 0:
 		ServiceCreate(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "serviceupdate"):
+	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "serviceupdate") == 0:
 		ServiceUpdate(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "servicestatement"):
-		ServiceStatement(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "servicerefund"):
+	// case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "servicestatement") == 0:
+	// 	ServiceStatement(w, r)
+	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "servicerefund") == 0:
 		ServiceRefund(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "getservice"):
+	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "getservice") == 0:
 		GetService(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "gettaskinfo"):
-		GetTaskInfo(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "getnodeinfo"):
-		GetNodeInfo(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "getnodes"):
+	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "getservicesfrompubkey") == 0:
+		GetServicesFromPubkey(w, r)
+	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "getnodes") == 0:
 		GetNodeList(w, r)
-	case strings.Contains(strings.ToLower(r.URL.String()), "servicestate"):
-		GetServiceState(w, r)
+	// case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "getnode") == 0:
+	// 	GetNode(w, r)
 	default:
 		otherCommand(w, r)
 	}
 }
 func otherCommand(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("otherCommand")
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Warning("ioutil.ReadAll faild")

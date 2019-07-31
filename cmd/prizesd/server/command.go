@@ -114,33 +114,34 @@ func ServiceRefund(w http.ResponseWriter, r *http.Request) {
 }
 func GetService(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	service, err := cmd.Service(serviceID)
+	serviceInfo, err := cmd.ServiceInfo(serviceID)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
 	}
-	json, err := json.Marshal(*service)
+	json, err := json.Marshal(*serviceInfo)
 	if err != nil {
 		fmt.Fprintf(w, "json.Marshal error")
 		return
 	}
 	fmt.Fprintf(w, string(json))
 }
-func GetTaskInfo(w http.ResponseWriter, r *http.Request) {
-	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	taskList, err := cmd.TasksInfo(serviceID)
+func GetServicesFromPubkey(w http.ResponseWriter, r *http.Request) {
+	pubkey := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
+	fmt.Println(pubkey)
+	serviceInfoList, err := cmd.GetServicesFromPubkey(pubkey)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
 	}
-	json, err := json.Marshal(*taskList)
+	json, err := json.Marshal(*serviceInfoList)
 	if err != nil {
 		fmt.Fprintf(w, "json.Marshal error")
 		return
 	}
 	fmt.Fprintf(w, string(json))
 }
-func GetNodeInfo(w http.ResponseWriter, r *http.Request) {
+func GetNode(w http.ResponseWriter, r *http.Request) {
 	NodeID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	node, err := cmd.GetNodeInfo(NodeID)
 	if err != nil {

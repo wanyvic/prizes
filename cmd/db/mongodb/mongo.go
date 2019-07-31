@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -158,6 +159,29 @@ func (m *MongDBClient) FindPrizesServiceOne(serviceID string) (*service.PrizesSe
 	}
 	return &prizeService, nil
 }
+
+func (m *MongDBClient) FindPrizesServiceFromPubkey(pubkey string) (*[]service.PrizesService, error) {
+	fmt.Println(pubkey)
+	var servicelist []service.PrizesService
+	if err := m.RefreshMongoDBConnection(); err != nil {
+		return nil, err
+	}
+	collection := m.mongoDBReader.Database(m.DataBase).Collection("service")
+
+	cursor, err := collection.Find(context.Background(), bson.M{"createspec.pubkey": bson.M{"$eq": pubkey}}, nil)
+	if err != nil {
+		return nil, err
+	}
+	for cursor.Next(context.Background()) {
+		var service service.PrizesService
+		if err := cursor.Decode(&service); err != nil {
+			return nil, err
+		}
+		servicelist = append(servicelist, service)
+	}
+	return &servicelist, nil
+}
+
 func (m *MongDBClient) FindTaskList(serviceID string) (*[]swarm.Task, error) {
 	var tasklist []swarm.Task
 	if err := m.RefreshMongoDBConnection(); err != nil {

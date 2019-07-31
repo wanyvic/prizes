@@ -16,12 +16,7 @@ import (
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 )
 
-var (
-	DefaultDockerImage = "massgrid/10.0-base-ubuntu16.04"
-)
-
-// 创建 服务
-// 通过 serviceCreate 配置信息创建服务 返回 PrizesService 和错误信息
+//Create returns prizeservice, response and error
 func Create(serviceCreate *service.ServiceCreate) (*service.PrizesService, *types.ServiceCreateResponse, error) {
 	serviceSpec := parseServiceCreateSpec(serviceCreate)
 	cli, err := dockerapi.GetDockerClient()
@@ -41,11 +36,11 @@ func Create(serviceCreate *service.ServiceCreate) (*service.PrizesService, *type
 	}
 
 	serviceCreateOrder(&prizeService, serviceCreate)
-	logrus.Info(prizeService.NextCheckTime)
 	logrus.Info(fmt.Sprintf("CreateService completed: ID: %s ,Warning: %s", response.ID, response.Warnings))
 	return &prizeService, &response, nil
 }
 
+//parseServiceCreateSpec serviceCreate convert to serviceSpec
 func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.ServiceSpec {
 	serviceCreate.ServiceCreateID = strconv.FormatInt(time.Now().UTC().Unix(), 10) + service.DefaultServiceCreateID + CreateRandomNumberString(8)
 	replicas := uint64(1)
@@ -58,6 +53,7 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 		spec.Name = CreateRandomString(10)
 	}
 
+	// parse service labels
 	spec.Labels = make(map[string]string)
 	spec.Labels["com.massgird.deletetime"] = time.Now().UTC().Add(time.Duration(float64(serviceCreate.Amount)/float64(serviceCreate.ServicePrice)*3600.0) * time.Second).String()
 	spec.Labels["com.massgrid.pubkey"] = serviceCreate.Pubkey
@@ -71,13 +67,20 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	spec.Labels["com.massgrid.gpucount"] = strconv.FormatInt(serviceCreate.GPUCount, 10)
 	spec.Labels["com.massgrid.outpoint.1."+serviceCreate.OutPoint] = strconv.FormatBool(false)
 
-	spec.Mode.Replicated = &swarm.ReplicatedService{Replicas: &replicas}
+	//parse service image
 	if strings.Contains(serviceCreate.Image, "massgrid/") {
 		spec.TaskTemplate.ContainerSpec.Image = serviceCreate.Image
 	} else {
-		spec.TaskTemplate.ContainerSpec.Image = DefaultDockerImage
+		spec.TaskTemplate.ContainerSpec.Image = service.DefaultDockerImage
 	}
+
+	// parse task user
 	spec.TaskTemplate.ContainerSpec.User = "root"
+
+	//parse service replicas
+	spec.Mode.Replicated = &swarm.ReplicatedService{Replicas: &replicas}
+
+	//parse service Resources limits
 
 	// limits := swarm.GenericResource{DiscreteResourceSpec: &swarm.DiscreteGenericResource{}}
 	// limits.DiscreteResourceSpec.Kind = serviceCreate.GPUType
@@ -85,6 +88,8 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 
 	// spec.TaskTemplate.Resources = &swarm.ResourceRequirements{Reservations: &swarm.Resources{}}
 	// spec.TaskTemplate.Resources.Reservations.GenericResources = append(spec.TaskTemplate.Resources.Reservations.GenericResources, limits)
+
+	//parse environment
 	if serviceCreate.SSHPubkey != "" {
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "N2N_SERVERIP="+GetFreeIp().String())
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "N2N_NETMASK=255.0.0.0")
@@ -101,7 +106,8 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	for k, v := range serviceCreate.ENV {
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, strings.ToUpper(k+"="+v))
 	}
-	//constraints
+
+	//parse service constraints
 	spec.TaskTemplate.Placement = &swarm.Placement{}
 	platform := swarm.Platform{Architecture: "amd64", OS: "linux"}
 	spec.TaskTemplate.Placement.Platforms = append(spec.TaskTemplate.Placement.Platforms, platform)
@@ -113,12 +119,14 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gputype  == "+serviceCreate.GPUType)
 	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gpucount == "+strconv.FormatInt(serviceCreate.GPUCount, 10))
 
+	//parse mount
 	mount := mount.Mount{Source: "/dev/net", Target: "/dev/net", ReadOnly: true}
 	spec.TaskTemplate.ContainerSpec.Mounts = append(spec.TaskTemplate.ContainerSpec.Mounts, mount)
 
 	return &spec
 }
 
+//serviceCreateOrder create the service order
 func serviceCreateOrder(p *service.PrizesService, serviceCreate *service.ServiceCreate) {
 	p.State = service.ServiceStateRunning
 	p.CreatedAt = p.DockerSerivce.Meta.CreatedAt

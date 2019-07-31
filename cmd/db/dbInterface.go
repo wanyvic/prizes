@@ -18,8 +18,7 @@ type DataBase interface {
 	FindServiceOne(serviceID string) (*swarm.Service, error)
 	FindPrizesServiceOne(serviceID string) (*service.PrizesService, error)
 	FindTaskList(serviceID string) (*[]swarm.Task, error)
-	// UpdateServiceOrderOne(prizestypes.ServiceOrder) (bool, error)
-	// FindServiceOrderOne(orderID string) (*prizestypes.ServiceOrder, error)
+	FindPrizesServiceFromPubkey(pubkey string) (*[]service.PrizesService, error)
 }
 
 var (

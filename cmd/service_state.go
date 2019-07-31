@@ -11,8 +11,7 @@ import (
 	"github.com/wanyvic/prizes/cmd/db"
 )
 
-//	根据ServiceID 去数据库中获取 所有task 状态、用时、地址等信息
-//
+//ServiceState returns ServiceStatistics error
 func ServiceState(serviceID string, statementAt time.Time) (types.ServiceStatistics, error) {
 	logrus.Debug("ServiceState: ", serviceID)
 	var serviceStatistics types.ServiceStatistics
@@ -57,6 +56,8 @@ func ServiceState(serviceID string, statementAt time.Time) (types.ServiceStatist
 	serviceStatistics.TaskList = taskStatistics
 	return serviceStatistics, nil
 }
+
+//getAddress get node receive_address
 func getAddress(nodeID string) (*string, error) {
 	if nodeID == "" {
 		return nil, errors.New("empty nodeID")

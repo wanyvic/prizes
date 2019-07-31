@@ -2,12 +2,54 @@ package prizeservice
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"math/big"
 	mathRand "math/rand"
 	"net"
 	"time"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/swarm"
+	"github.com/wanyvic/prizes/api/types/service"
+	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 )
+
+func ServiceInfo(prizeService *service.PrizesService) (*service.ServiceInfo, error) {
+	serviceInfo := &service.ServiceInfo{}
+	serviceInfo.ServiceID = prizeService.DockerSerivce.ID
+	serviceInfo.CreatedAt = prizeService.CreatedAt
+	serviceInfo.DeleteAt = prizeService.DeleteAt
+	serviceInfo.NextCheckTime = prizeService.NextCheckTime
+	serviceInfo.Order = prizeService.Order
+	serviceInfo.CreateSpec = prizeService.CreateSpec
+	serviceInfo.UpdateSpec = prizeService.UpdateSpec
+	serviceInfo.State = prizeService.State
+
+	for i := 0; i < len(serviceInfo.Order); i++ {
+		serviceInfo.Order[i].Statement = serviceInfo.Order[i].Statement[0:0]
+	}
+
+	if serviceInfo.State == service.ServiceStateRunning {
+		cli, err := dockerapi.GetDockerClient()
+		if err != nil {
+			return nil, err
+		}
+		validNameFilter := filters.NewArgs()
+		validNameFilter.Add("service", prizeService.DockerSerivce.ID)
+		validNameFilter.Add("desired-state", string(swarm.TaskStateRunning))
+		validNameFilter.Add("desired-state", string(swarm.TaskStateAccepted))
+		tasklist, err := cli.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
+		if err != nil {
+			return nil, err
+		}
+		if len(tasklist) > 0 {
+			serviceInfo.TaskINfo = &tasklist[0]
+		}
+	}
+	return serviceInfo, nil
+}
 
 func CreateRandomNumberString(len int) string {
 	var container string

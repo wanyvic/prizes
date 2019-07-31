@@ -22,23 +22,19 @@ func GetNodeInfo(NodeID string) (*swarm.Node, error) {
 	}
 	return &node, nil
 }
-func RemoveNode(NodeID string, force bool) error {
-	cli, err := dockerapi.GetDockerClient()
-	if err != nil {
-		return err
-	}
-	err = cli.NodeRemove(context.Background(), NodeID, types.NodeRemoveOptions{Force: force})
-	if err != nil {
-		return err
-	}
-	return nil
-}
 func GetNodeList() (*prizestypes.NodeListStatistics, error) {
 	var nodeListStatistics prizestypes.NodeListStatistics
 	cli, err := dockerapi.GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
+
+	swarminfo, err := cli.SwarmInspect(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	nodeListStatistics.WorkerToken = swarminfo.JoinTokens.Worker
 	nodelist, err := cli.NodeList(context.Background(), types.NodeListOptions{})
 	if err != nil {
 		return nil, err
@@ -57,11 +53,14 @@ func GetNodeList() (*prizestypes.NodeListStatistics, error) {
 		}
 	}
 	for _, node := range nodelist {
-		if node.Spec.Role == "manager" {
+		if node.Spec.Role == swarm.NodeRoleManager {
+			if nodeListStatistics.WorkerToken != "" {
+				nodeListStatistics.WorkerToken += " " + node.ManagerStatus.Addr
+			}
 			continue
 		}
 		nodeListStatistics.TotalCount++
-		if node.Status.State == "ready" {
+		if node.Status.State == swarm.NodeStateReady {
 			nodeListStatistics.AvailabilityCount++
 		}
 		if status[node.ID] == 0 {
@@ -72,6 +71,17 @@ func GetNodeList() (*prizestypes.NodeListStatistics, error) {
 		}
 	}
 	return &nodeListStatistics, nil
+}
+func removeNode(NodeID string, force bool) error {
+	cli, err := dockerapi.GetDockerClient()
+	if err != nil {
+		return err
+	}
+	err = cli.NodeRemove(context.Background(), NodeID, types.NodeRemoveOptions{Force: force})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func parseNodeInfo(node *swarm.Node, OnWorking bool) (ref prizestypes.NodeInfo) {
 	ref.NodeID = node.ID

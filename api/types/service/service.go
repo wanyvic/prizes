@@ -7,47 +7,48 @@ import (
 	"github.com/wanyvic/prizes/api/types/order"
 )
 
+//PrizesService includes order createSpec updateSpec and etc.
 type PrizesService struct {
 	DockerSerivce swarm.Service
 	CreateSpec    ServiceCreate
 	UpdateSpec    []ServiceUpdate
 	Order         []order.ServiceOrder
-	Record        []order.Statement
 	State         ServiceState
 	CreatedAt     time.Time
 	DeleteAt      time.Time
 	NextCheckTime time.Time
 }
+
+//ServiceState includes UNKNOWN RUNNING COMPLETE
 type ServiceState string
 
 const (
-	// NodeStateUnknown UNKNOWN
+	// ServiceStateUnknown UNKNOWN
 	ServiceStateUnknown ServiceState = "unknown"
-	// NodeStateReady READY
+	// ServiceStateRunning RUNNING
 	ServiceStateRunning ServiceState = "running"
-	// NodeStateDisconnected DISCONNECTED
+	// ServiceStateCompleted COMPLETE
 	ServiceStateCompleted ServiceState = "completed"
-)
-
-var (
+	//DefaultDockerImage massgrid/10.0-base-ubuntu16.04
+	DefaultDockerImage = "massgrid/10.0-base-ubuntu16.04"
+	// DefaultServiceCreateID 100000
 	DefaultServiceCreateID = "100000"
+	// DefaultServiceUpdateID 100100
 	DefaultServiceUpdateID = "100100"
+	// DefaultServiceRefundID 100200
 	DefaultServiceRefundID = "100200"
-	DefaultStatementID     = "100300"
+	// DefaultStatementID 100300
+	DefaultStatementID = "100300"
 )
 
-// 创建 服务
-// 通过 serviceCreate 配置信息创建服务 返回 serviceID 和错误信息
-type ServiceCommand interface {
-	// ServiceCreate(*prizestypes.ServiceCreate) (string, error)
-
-	// ServiceReFund() (prizestypes.Statement, error)
+type ServiceInfo struct {
+	ServiceID     string               `json:"service_id,omitempty"`
+	CreatedAt     time.Time            `json:"create_at,omitempty"`
+	DeleteAt      time.Time            `json:"delete_at,omitempty"`
+	NextCheckTime time.Time            `json:"next_check_time,omitempty"`
+	Order         []order.ServiceOrder `json:"order,omitempty"`
+	CreateSpec    ServiceCreate        `json:"create_spec,omitempty"`
+	UpdateSpec    []ServiceUpdate      `json:"update_spec,omitempty"`
+	State         ServiceState         `json:"state,omitempty"`
+	TaskINfo      *swarm.Task          `json:"task_info,omitempty"`
 }
-
-//退款服务
-// 返回结算清单
-//结算服务
-
-//更新服务
-
-//

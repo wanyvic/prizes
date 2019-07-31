@@ -7,13 +7,12 @@ import (
 )
 
 type ServiceStatistics struct {
-	ServiceID string    `json:"service_id,omitempty"`
-	CreatedAt time.Time `json:"create_at,omitempty"`
-	RemoveAt  time.Time `json:"remove_at,omitempty"`
-
-	State   swarm.TaskState `json:"state,omitempty"`
-	Price   int64           `json:"price,omitempty"`
-	FeeRate float64         `json:"fee_rate,omitempty"`
+	ServiceID string          `json:"service_id,omitempty"`
+	CreatedAt time.Time       `json:"create_at,omitempty"`
+	RemoveAt  time.Time       `json:"remove_at,omitempty"`
+	State     swarm.TaskState `json:"state,omitempty"`
+	Price     int64           `json:"price,omitempty"`
+	FeeRate   float64         `json:"fee_rate,omitempty"`
 	Hardware
 	TaskList []TaskStatistics `json:"tasklist,omitempty"`
 }
@@ -29,7 +28,7 @@ type TaskStatistics struct {
 	DesiredState   swarm.TaskState `json:"desired_state,omitempty"`
 }
 type NodeListStatistics struct {
-	Token             string     `json:"token,omitempty"`
+	WorkerToken       string     `json:"worker_token,omitempty"`
 	TotalCount        int        `json:"total_count,omitempty"`
 	AvailabilityCount int        `json:"availability_count,omitempty"`
 	UsableCount       int        `json:"usable_count,omitempty"`
