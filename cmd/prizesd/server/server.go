@@ -23,6 +23,10 @@ const DefaultHTTPHost = "localhost"
 const DefaultHTTPPort = 9333 // Default HTTP Port
 var DefaultTCPHost = fmt.Sprintf("%s:%d", DefaultHTTPHost, DefaultHTTPPort)
 
+type Response struct {
+	Err    string      `json:"error"`
+	Result interface{} `json:result`
+}
 type ServerOpts struct {
 	Proto string
 	Addr  string
