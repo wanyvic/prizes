@@ -50,5 +50,5 @@ type ServiceInfo struct {
 	CreateSpec    ServiceCreate        `json:"create_spec,omitempty"`
 	UpdateSpec    []ServiceUpdate      `json:"update_spec,omitempty"`
 	State         ServiceState         `json:"state,omitempty"`
-	TaskINfo      *swarm.Task          `json:"task_info,omitempty"`
+	TaskInfo      *swarm.Task          `json:"task_info,omitempty"`
 }

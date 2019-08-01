@@ -45,7 +45,7 @@ func ServiceInfo(prizeService *service.PrizesService) (*service.ServiceInfo, err
 			return nil, err
 		}
 		if len(tasklist) > 0 {
-			serviceInfo.TaskINfo = &tasklist[0]
+			serviceInfo.TaskInfo = &tasklist[0]
 		}
 	}
 	return serviceInfo, nil

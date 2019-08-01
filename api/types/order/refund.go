@@ -3,8 +3,8 @@ package order
 import "time"
 
 type RefundInfo struct {
-	RefundPay *[]RefundPayment
-	Statement *Statement
+	RefundPay *[]RefundPayment `json:refund_pay,omitempty""`
+	Statement *Statement       `json:statement,omitempty""`
 }
 type RefundPayment struct {
 	RefundID          string    `json:"refund_id,omitempty"`

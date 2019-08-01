@@ -7,6 +7,7 @@ import (
 type OrderState string
 
 type ServiceOrder struct {
+	OriderID          string         `json:"order_id,omitempty"`
 	OutPoint          string         `json:"out_point,omitempty"`
 	CreatedAt         time.Time      `json:"create_at,omitempty"`
 	RemoveAt          time.Time      `json:"remove_at,omitempty"`

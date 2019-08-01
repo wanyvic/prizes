@@ -59,12 +59,12 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	spec.Labels["com.massgrid.pubkey"] = serviceCreate.Pubkey
 	spec.Labels["com.massgrid.price"] = strconv.FormatInt(serviceCreate.ServicePrice, 10)
 	spec.Labels["com.massgrid.payment"] = strconv.FormatInt(serviceCreate.Amount, 10)
-	spec.Labels["com.massgrid.cputype"] = serviceCreate.CPUType
-	spec.Labels["com.massgrid.cputhread"] = strconv.FormatInt(serviceCreate.CPUThread, 10)
-	spec.Labels["com.massgrid.memorytype"] = serviceCreate.MemoryType
-	spec.Labels["com.massgrid.memorycount"] = strconv.FormatInt(serviceCreate.MemoryCount, 10)
-	spec.Labels["com.massgrid.gputype"] = serviceCreate.GPUType
-	spec.Labels["com.massgrid.gpucount"] = strconv.FormatInt(serviceCreate.GPUCount, 10)
+	spec.Labels["com.massgrid.cputype"] = serviceCreate.Hardware.CPUType
+	spec.Labels["com.massgrid.cputhread"] = strconv.FormatInt(serviceCreate.Hardware.CPUThread, 10)
+	spec.Labels["com.massgrid.memorytype"] = serviceCreate.Hardware.MemoryType
+	spec.Labels["com.massgrid.memorycount"] = strconv.FormatInt(serviceCreate.Hardware.MemoryCount, 10)
+	spec.Labels["com.massgrid.gputype"] = serviceCreate.Hardware.GPUType
+	spec.Labels["com.massgrid.gpucount"] = strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10)
 	spec.Labels["com.massgrid.outpoint.1."+serviceCreate.OutPoint] = strconv.FormatBool(false)
 
 	//parse service image
@@ -97,12 +97,12 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "SSH_PUBKEY="+serviceCreate.SSHPubkey)
 	}
 
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "CPUTYPE="+serviceCreate.CPUType)
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "CPUCOUNT="+strconv.FormatInt(serviceCreate.CPUThread, 10))
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "MEMORYTYPE="+serviceCreate.MemoryType)
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "MEMORYCOUNT="+strconv.FormatInt(serviceCreate.MemoryCount, 10))
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "GPUTYPE="+serviceCreate.GPUType)
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "GPUTYPE="+strconv.FormatInt(serviceCreate.GPUCount, 10))
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "CPUTYPE="+serviceCreate.Hardware.CPUType)
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "CPUCOUNT="+strconv.FormatInt(serviceCreate.Hardware.CPUThread, 10))
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "MEMORYTYPE="+serviceCreate.Hardware.MemoryType)
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "MEMORYCOUNT="+strconv.FormatInt(serviceCreate.Hardware.MemoryCount, 10))
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "GPUTYPE="+serviceCreate.Hardware.GPUType)
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "GPUTYPE="+strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10))
 	for k, v := range serviceCreate.ENV {
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, strings.ToUpper(k+"="+v))
 	}
@@ -112,12 +112,12 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	platform := swarm.Platform{Architecture: "amd64", OS: "linux"}
 	spec.TaskTemplate.Placement.Platforms = append(spec.TaskTemplate.Placement.Platforms, platform)
 	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "node.role == worker")
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputype  == "+serviceCreate.CPUType)
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputhread == "+strconv.FormatInt(serviceCreate.CPUThread, 10))
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.memorytype  == "+serviceCreate.MemoryType)
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.memorycount == "+strconv.FormatInt(serviceCreate.MemoryCount, 10))
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gputype  == "+serviceCreate.GPUType)
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gpucount == "+strconv.FormatInt(serviceCreate.GPUCount, 10))
+	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputype  == "+serviceCreate.Hardware.CPUType)
+	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputhread == "+strconv.FormatInt(serviceCreate.Hardware.CPUThread, 10))
+	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.memorytype  == "+serviceCreate.Hardware.MemoryType)
+	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.memorycount == "+strconv.FormatInt(serviceCreate.Hardware.MemoryCount, 10))
+	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gputype  == "+serviceCreate.Hardware.GPUType)
+	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gpucount == "+strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10))
 
 	//parse mount
 	mount := mount.Mount{Source: "/dev/net", Target: "/dev/net", ReadOnly: true}
