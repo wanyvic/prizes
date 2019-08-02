@@ -14,3 +14,4 @@ const (
 	BuildTime             string = "$BUILDTIME"
 )
 DVEOF
+ sudo docker service rm $(sudo docker service ls -f label=com.massgrid.pubkey -q)
