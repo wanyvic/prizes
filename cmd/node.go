@@ -88,13 +88,13 @@ func parseNodeInfo(node *swarm.Node, OnWorking bool) (ref prizestypes.NodeInfo) 
 	ref.Labels = node.Description.Engine.Labels
 	ref.NodeState = string(node.Status.State)
 	ref.ReachAddress = node.Description.Engine.Labels["REVENUE_ADDRESS"]
-	ref.CPUType = node.Description.Engine.Labels["CPUNAME"]
-	ref.CPUThread, _ = strconv.ParseInt(node.Description.Engine.Labels["CPUCOUNT"], 10, 64)
-	ref.MemoryType = node.Description.Engine.Labels["MEMNAME"]
-	ref.MemoryCount, _ = strconv.ParseInt(node.Description.Engine.Labels["MEMCOUNT"], 10, 64)
-	ref.GPUType = node.Description.Engine.Labels["GPUNAME"]
-	ref.GPUCount, _ = strconv.ParseInt(node.Description.Engine.Labels["GPUCOUNT"], 10, 64)
-	ref.PersistentStore = node.Description.Engine.Labels["NFSIP"]
+	ref.Hardware.CPUType = node.Description.Engine.Labels["CPUNAME"]
+	ref.Hardware.CPUThread, _ = strconv.ParseInt(node.Description.Engine.Labels["CPUCOUNT"], 10, 64)
+	ref.Hardware.MemoryType = node.Description.Engine.Labels["MEMNAME"]
+	ref.Hardware.MemoryCount, _ = strconv.ParseInt(node.Description.Engine.Labels["MEMCOUNT"], 10, 64)
+	ref.Hardware.GPUType = node.Description.Engine.Labels["GPUNAME"]
+	ref.Hardware.GPUCount, _ = strconv.ParseInt(node.Description.Engine.Labels["GPUCOUNT"], 10, 64)
+	ref.Hardware.PersistentStore = node.Description.Engine.Labels["NFSIP"]
 	ref.OnWorking = OnWorking
 	return ref
 }

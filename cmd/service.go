@@ -105,6 +105,7 @@ func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
 	logrus.Info(fmt.Sprintf("%+v", refundInfo))
 	return &refundInfo, nil
 }
+
 func ServiceInfo(serviceID string) (*service.ServiceInfo, error) {
 	prizeService, err := db.DBimplement.FindPrizesServiceOne(serviceID)
 	if err != nil {
@@ -116,6 +117,7 @@ func ServiceInfo(serviceID string) (*service.ServiceInfo, error) {
 	}
 	return serviceInfo, nil
 }
+
 func GetServicesFromPubkey(pubkey string) (*[]service.ServiceInfo, error) {
 	serviceInfoList := []service.ServiceInfo{}
 	prizeServiceList, err := db.DBimplement.FindPrizesServiceFromPubkey(pubkey)

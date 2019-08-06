@@ -39,6 +39,6 @@ type NodeInfo struct {
 	NodeState    string            `json:"noed_state,omitempty"`
 	Labels       map[string]string `json:"labels,omitempty"`
 	ReachAddress string            `json:"reach_address,omitempty"`
-	hardware     Hardware          `json:"hardware,omitempty"`
+	Hardware     Hardware          `json:"hardware,omitempty"`
 	OnWorking    bool              `json:"onworking,omitempty"`
 }
