@@ -151,7 +151,6 @@ func GetService(w http.ResponseWriter, r *http.Request) {
 }
 func GetServicesFromPubkey(w http.ResponseWriter, r *http.Request) {
 	pubkey := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	fmt.Println(pubkey)
 	serviceInfoList, err := cmd.GetServicesFromPubkey(pubkey)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)

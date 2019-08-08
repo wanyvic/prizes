@@ -2,7 +2,6 @@ package mongodb
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -161,7 +160,6 @@ func (m *MongDBClient) FindPrizesServiceOne(serviceID string) (*service.PrizesSe
 }
 
 func (m *MongDBClient) FindPrizesServiceFromPubkey(pubkey string) (*[]service.PrizesService, error) {
-	fmt.Println(pubkey)
 	var servicelist []service.PrizesService
 	if err := m.RefreshMongoDBConnection(); err != nil {
 		return nil, err

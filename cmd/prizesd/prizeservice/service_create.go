@@ -83,12 +83,12 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 
 	//parse service Resources limits
 
-	// limits := swarm.GenericResource{DiscreteResourceSpec: &swarm.DiscreteGenericResource{}}
-	// limits.DiscreteResourceSpec.Kind = serviceCreate.GPUType
-	// limits.DiscreteResourceSpec.Value = serviceCreate.GPUCount
+	limits := swarm.GenericResource{DiscreteResourceSpec: &swarm.DiscreteGenericResource{}}
+	limits.DiscreteResourceSpec.Kind = serviceCreate.Hardware.GPUType
+	limits.DiscreteResourceSpec.Value = serviceCreate.Hardware.GPUCount
 
-	// spec.TaskTemplate.Resources = &swarm.ResourceRequirements{Reservations: &swarm.Resources{}}
-	// spec.TaskTemplate.Resources.Reservations.GenericResources = append(spec.TaskTemplate.Resources.Reservations.GenericResources, limits)
+	spec.TaskTemplate.Resources = &swarm.ResourceRequirements{Reservations: &swarm.Resources{}}
+	spec.TaskTemplate.Resources.Reservations.GenericResources = append(spec.TaskTemplate.Resources.Reservations.GenericResources, limits)
 
 	//parse environment
 	if serviceCreate.SSHPubkey != "" {
@@ -112,13 +112,13 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	spec.TaskTemplate.Placement = &swarm.Placement{}
 	platform := swarm.Platform{Architecture: "amd64", OS: "linux"}
 	spec.TaskTemplate.Placement.Platforms = append(spec.TaskTemplate.Placement.Platforms, platform)
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "node.role == worker")
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputype  == "+serviceCreate.Hardware.CPUType)
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.cputhread == "+strconv.FormatInt(serviceCreate.Hardware.CPUThread, 10))
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.memorytype  == "+serviceCreate.Hardware.MemoryType)
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.memorycount == "+strconv.FormatInt(serviceCreate.Hardware.MemoryCount, 10))
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gputype  == "+serviceCreate.Hardware.GPUType)
-	// spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels.gpucount == "+strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10))
+	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "node.role == worker")
+	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels."+prizestypes.LabelCPUType+" == "+serviceCreate.Hardware.CPUType)
+	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels."+prizestypes.LabelCPUThread+" == "+strconv.FormatInt(serviceCreate.Hardware.CPUThread, 10))
+	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels."+prizestypes.LabelMemoryType+" == "+serviceCreate.Hardware.MemoryType)
+	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels."+prizestypes.LabelMemoryCount+" == "+strconv.FormatInt(serviceCreate.Hardware.MemoryCount, 10))
+	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels."+prizestypes.LabelGPUType+" == "+serviceCreate.Hardware.GPUType)
+	spec.TaskTemplate.Placement.Constraints = append(spec.TaskTemplate.Placement.Constraints, "engine.labels."+prizestypes.LabelGPUCount+" == "+strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10))
 
 	//parse mount
 	mount := mount.Mount{Source: "/dev/net", Target: "/dev/net", ReadOnly: true}
