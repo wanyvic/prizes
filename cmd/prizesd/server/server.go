@@ -24,8 +24,8 @@ const DefaultHTTPPort = 9333 // Default HTTP Port
 var DefaultTCPHost = fmt.Sprintf("%s:%d", DefaultHTTPHost, DefaultHTTPPort)
 
 type Response struct {
-	Err    string      `json:"error"`
-	Result interface{} `json:result`
+	Error  string      `json:"error,omitempty"`
+	Result interface{} `json:"result,omitempty"`
 }
 type ServerOpts struct {
 	Proto string
