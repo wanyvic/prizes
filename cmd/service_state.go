@@ -66,7 +66,7 @@ func getAddress(nodeID string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	if value, ok := node.Description.Engine.Labels["REVENUE_ADDRESS"]; ok {
+	if value, ok := node.Description.Engine.Labels[types.LabelRevenueAddress]; ok {
 		return &value, nil
 	}
 	return nil, errors.New("Address not found")

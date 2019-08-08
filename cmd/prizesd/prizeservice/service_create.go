@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/sirupsen/logrus"
+	prizestypes "github.com/wanyvic/prizes/api/types"
 	"github.com/wanyvic/prizes/api/types/order"
 	"github.com/wanyvic/prizes/api/types/service"
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
@@ -97,12 +98,12 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "SSH_PUBKEY="+serviceCreate.SSHPubkey)
 	}
 
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "CPUTYPE="+serviceCreate.Hardware.CPUType)
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "CPUCOUNT="+strconv.FormatInt(serviceCreate.Hardware.CPUThread, 10))
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "MEMORYTYPE="+serviceCreate.Hardware.MemoryType)
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "MEMORYCOUNT="+strconv.FormatInt(serviceCreate.Hardware.MemoryCount, 10))
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "GPUTYPE="+serviceCreate.Hardware.GPUType)
-	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "GPUTYPE="+strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10))
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelCPUType+"="+serviceCreate.Hardware.CPUType)
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelCPUThread+"="+strconv.FormatInt(serviceCreate.Hardware.CPUThread, 10))
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelMemoryType+"="+serviceCreate.Hardware.MemoryType)
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelMemoryCount+"="+strconv.FormatInt(serviceCreate.Hardware.MemoryCount, 10))
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelGPUType+"="+serviceCreate.Hardware.GPUType)
+	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelGPUCount+"="+strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10))
 	for k, v := range serviceCreate.ENV {
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, strings.ToUpper(k+"="+v))
 	}
