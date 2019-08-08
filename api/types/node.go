@@ -7,7 +7,7 @@ const (
 	LabelMemoryType     = "MEMORYTYPE"
 	LabelMemoryCount    = "MEMORYCOUNT"
 	LabelGPUType        = "GPUTYPE"
-	LabelGPUCount       = "MEMORYCOUNT"
+	LabelGPUCount       = "GPUCOUNT"
 	LabelNFSIP          = "NFSIP"
 )
 
