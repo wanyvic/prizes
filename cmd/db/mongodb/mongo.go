@@ -101,7 +101,7 @@ func (m *MongDBClient) UpdatePrizesServiceOne(service service.PrizesService) (bo
 	updateOption := options.UpdateOptions{}
 	updateOption.SetUpsert(true)
 	collection := m.mongoDBReader.Database(m.DataBase).Collection("service")
-	_, err := collection.UpdateOne(context.Background(), bson.D{{"id", service.DockerSerivce.ID}}, bson.D{{"$set", service}}, &updateOption)
+	_, err := collection.UpdateOne(context.Background(), bson.D{{"id", service.DockerService.ID}}, bson.D{{"$set", service}}, &updateOption)
 	if err != nil {
 		return false, err
 	}

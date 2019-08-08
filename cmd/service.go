@@ -26,7 +26,7 @@ func ServiceCreate(serviceCreate *service.ServiceCreate) (*types.ServiceCreateRe
 	if err != nil {
 		return nil, err
 	}
-	calculagraph.Push(prizeService.DockerSerivce.ID, prizeService.NextCheckTime)
+	calculagraph.Push(prizeService.DockerService.ID, prizeService.NextCheckTime)
 	return response, nil
 }
 
@@ -44,7 +44,7 @@ func ServiceUpdate(serviceUpdate *service.ServiceUpdate) (*types.ServiceUpdateRe
 	if err != nil {
 		return nil, err
 	}
-	calculagraph.ChangeCheckTime(prizeService.DockerSerivce.ID, prizeService.NextCheckTime)
+	calculagraph.ChangeCheckTime(prizeService.DockerService.ID, prizeService.NextCheckTime)
 	return response, nil
 }
 
@@ -67,7 +67,7 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 		return nil, err
 	}
 	if serviceState == service.ServiceStateRunning {
-		calculagraph.ChangeCheckTime(prizeService.DockerSerivce.ID, prizeService.NextCheckTime)
+		calculagraph.ChangeCheckTime(prizeService.DockerService.ID, prizeService.NextCheckTime)
 	} else if serviceState == service.ServiceStateCompleted {
 		err := serviceRemove(ServiceID)
 		calculagraph.RemoveService(ServiceID)

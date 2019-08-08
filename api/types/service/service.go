@@ -9,7 +9,7 @@ import (
 
 //PrizesService includes order createSpec updateSpec and etc.
 type PrizesService struct {
-	DockerSerivce swarm.Service
+	DockerService swarm.Service
 	CreateSpec    ServiceCreate
 	UpdateSpec    []ServiceUpdate
 	Order         []order.ServiceOrder

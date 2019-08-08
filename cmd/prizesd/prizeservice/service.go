@@ -18,7 +18,7 @@ import (
 
 func ServiceInfo(prizeService *service.PrizesService) (*service.ServiceInfo, error) {
 	serviceInfo := &service.ServiceInfo{}
-	serviceInfo.ServiceID = prizeService.DockerSerivce.ID
+	serviceInfo.ServiceID = prizeService.DockerService.ID
 	serviceInfo.CreatedAt = prizeService.CreatedAt
 	serviceInfo.DeleteAt = prizeService.DeleteAt
 	serviceInfo.NextCheckTime = prizeService.NextCheckTime
@@ -37,7 +37,7 @@ func ServiceInfo(prizeService *service.PrizesService) (*service.ServiceInfo, err
 			return nil, err
 		}
 		validNameFilter := filters.NewArgs()
-		validNameFilter.Add("service", prizeService.DockerSerivce.ID)
+		validNameFilter.Add("service", prizeService.DockerService.ID)
 		validNameFilter.Add("desired-state", string(swarm.TaskStateRunning))
 		validNameFilter.Add("desired-state", string(swarm.TaskStateAccepted))
 		tasklist, err := cli.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})

@@ -31,7 +31,7 @@ func Create(serviceCreate *service.ServiceCreate) (*service.PrizesService, *type
 	}
 
 	prizeService := service.PrizesService{CreateSpec: *serviceCreate}
-	prizeService.DockerSerivce, _, err = cli.ServiceInspectWithRaw(context.Background(), response.ID, types.ServiceInspectOptions{})
+	prizeService.DockerService, _, err = cli.ServiceInspectWithRaw(context.Background(), response.ID, types.ServiceInspectOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -130,7 +130,7 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 //serviceCreateOrder create the service order
 func serviceCreateOrder(p *service.PrizesService, serviceCreate *service.ServiceCreate) {
 	p.State = service.ServiceStateRunning
-	p.CreatedAt = p.DockerSerivce.Meta.CreatedAt
+	p.CreatedAt = p.DockerService.Meta.CreatedAt
 	timeScale := time.Duration(float64(serviceCreate.Amount) / float64(serviceCreate.ServicePrice) * float64(time.Hour))
 	p.DeleteAt = p.CreatedAt.Add(timeScale)
 	serviceOrder := order.ServiceOrder{}

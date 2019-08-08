@@ -22,8 +22,8 @@ func Update(prizeService *service.PrizesService, serviceUpdate *service.ServiceU
 		return nil, err
 	}
 	prizeService.UpdateSpec = append(prizeService.UpdateSpec, *serviceUpdate)
-	serviceSpec := parseServiceUpdateSpec(&prizeService.DockerSerivce, serviceUpdate)
-	response, err := cli.ServiceUpdate(context.Background(), serviceUpdate.ServiceID, prizeService.DockerSerivce.Meta.Version, *serviceSpec, types.ServiceUpdateOptions{})
+	serviceSpec := parseServiceUpdateSpec(&prizeService.DockerService, serviceUpdate)
+	response, err := cli.ServiceUpdate(context.Background(), serviceUpdate.ServiceID, prizeService.DockerService.Meta.Version, *serviceSpec, types.ServiceUpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
