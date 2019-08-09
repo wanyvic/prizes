@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	DefaultStatementOptions = StatementOptions{StatementDuration: time.Duration(1 * time.Hour), MasterNodeFeeAddress: "masternodeaddr", DevFeeAddress: "DevFeeAddress", MasterNodeFeeRate: 100, DevFeeRate: 100}
+	DefaultStatementOptions = StatementOptions{StatementDuration: time.Duration(5 * time.Minute), MasterNodeFeeAddress: "masternodeaddr", DevFeeAddress: "DevFeeAddress", MasterNodeFeeRate: 100, DevFeeRate: 100}
 )
 
 type Statement struct {

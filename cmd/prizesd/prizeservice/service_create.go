@@ -90,6 +90,7 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	spec.TaskTemplate.Resources = &swarm.ResourceRequirements{Reservations: &swarm.Resources{}}
 	spec.TaskTemplate.Resources.Reservations.GenericResources = append(spec.TaskTemplate.Resources.Reservations.GenericResources, limits)
 
+	spec.TaskTemplate.RestartPolicy = &swarm.RestartPolicy{Condition: swarm.RestartPolicyConditionOnFailure}
 	//parse environment
 	if serviceCreate.SSHPubkey != "" {
 		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, "N2N_SERVERIP="+GetFreeIp().String())

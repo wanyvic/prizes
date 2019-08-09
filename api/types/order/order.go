@@ -14,7 +14,7 @@ type ServiceOrder struct {
 	OrderState        OrderState     `json:"order_state,omitempty"`
 	ServicePrice      int64          `json:"service_price,omitempty"`
 	Drawee            string         `json:"drawee,omitempty"`
-	Balance           int64          `json:"balance,omitempty"`
+	Balance           int64          `json:"balance"`
 	LastStatementTime time.Time      `json:"last_statement_time,omitempty"`
 	Statement         []Statement    `json:"statement,omitempty"`
 	Refund            *RefundPayment `json:"refund,omitempty"`
