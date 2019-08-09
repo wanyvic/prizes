@@ -52,6 +52,8 @@ func serviceUpdateOrder(p *service.PrizesService, serviceUpdate *service.Service
 	serviceOrder.Drawee = serviceUpdate.Drawee
 	timeScale := time.Duration(float64(serviceUpdate.Amount) / float64(serviceUpdate.ServicePrice) * float64(time.Hour))
 	p.DeleteAt = p.DeleteAt.Add(timeScale)
+	serviceOrder.ServicePrice = serviceUpdate.ServicePrice
+	serviceOrder.LastStatementTime = p.CreatedAt
 
 	serviceOrder.RemoveAt = p.DeleteAt
 	serviceOrder.OrderState = order.OrderStateWaitToPay
