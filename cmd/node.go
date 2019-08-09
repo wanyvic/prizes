@@ -62,12 +62,12 @@ func GetNodeList() (*prizestypes.NodeListStatistics, error) {
 		nodeListStatistics.TotalCount++
 		if node.Status.State == swarm.NodeStateReady {
 			nodeListStatistics.AvailabilityCount++
-		}
-		if status[node.ID] == 0 {
-			nodeListStatistics.List = append(nodeListStatistics.List, parseNodeInfo(&node, false))
-			nodeListStatistics.UsableCount++
-		} else {
-			nodeListStatistics.List = append(nodeListStatistics.List, parseNodeInfo(&node, true))
+			if status[node.ID] == 0 {
+				nodeListStatistics.List = append(nodeListStatistics.List, parseNodeInfo(&node, false))
+				nodeListStatistics.UsableCount++
+			} else {
+				nodeListStatistics.List = append(nodeListStatistics.List, parseNodeInfo(&node, true))
+			}
 		}
 	}
 	return &nodeListStatistics, nil
