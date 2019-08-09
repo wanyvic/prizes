@@ -32,16 +32,16 @@ func Update(prizeService *service.PrizesService, serviceUpdate *service.ServiceU
 	logrus.Info(fmt.Sprintf("CreateService completed: ID: %s ,Warning: %s", serviceUpdate.ServiceID, response.Warnings))
 	return &response, nil
 }
-func parseServiceUpdateSpec(dockerservice *swarm.Service, serviceUpdate *service.ServiceUpdate) (spec *swarm.ServiceSpec) {
+func parseServiceUpdateSpec(dockerservice *swarm.Service, serviceUpdate *service.ServiceUpdate) *swarm.ServiceSpec {
 	dockerservice.Spec.Labels["com.massgird.deletetime"] = dockerservice.Meta.CreatedAt.Add(time.Duration(float64(serviceUpdate.Amount)/float64(serviceUpdate.ServicePrice)*3600.0) * time.Second).String()
 	num := 1
-	for k, _ := range spec.Labels {
+	for k, _ := range dockerservice.Spec.Labels {
 		if strings.Contains(k, "com.massgrid.outpoint") {
 			num++
 		}
 	}
 	serviceUpdate.ServiceUpdateID = strconv.FormatInt(time.Now().UTC().Unix(), 10) + service.DefaultServiceUpdateID + CreateRandomNumberString(8)
-	spec.Labels["com.massgrid.outpoint."+strconv.Itoa(num)+"."+serviceUpdate.OutPoint] = strconv.FormatBool(false)
+	dockerservice.Spec.Labels["com.massgrid.outpoint."+strconv.Itoa(num)+"."+serviceUpdate.OutPoint] = strconv.FormatBool(false)
 	return &dockerservice.Spec
 }
 func serviceUpdateOrder(p *service.PrizesService, serviceUpdate *service.ServiceUpdate) {

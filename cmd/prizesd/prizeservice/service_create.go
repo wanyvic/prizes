@@ -67,7 +67,7 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	spec.Labels["com.massgrid.gputype"] = serviceCreate.Hardware.GPUType
 	spec.Labels["com.massgrid.gpucount"] = strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10)
 	spec.Labels["com.massgrid.outpoint.1."+serviceCreate.OutPoint] = strconv.FormatBool(false)
-
+	spec.TaskTemplate.ContainerSpec.Labels["com.massgrid.type"] = "worker"
 	//parse service image
 	if strings.Contains(serviceCreate.Image, "massgrid/") {
 		spec.TaskTemplate.ContainerSpec.Image = serviceCreate.Image

@@ -48,7 +48,7 @@ func GetNodeList() (*prizestypes.NodeListStatistics, error) {
 	status := make(map[string]int)
 
 	for _, task := range tasklist {
-		if _, ok := status["com.massgird.work"]; ok {
+		if v := task.Spec.ContainerSpec.Labels["com.massgird.type"]; v == "worker" {
 			status[task.NodeID]++
 		}
 	}
