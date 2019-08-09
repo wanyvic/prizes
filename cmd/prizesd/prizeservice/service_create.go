@@ -47,16 +47,21 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	replicas := uint64(1)
 	spec := swarm.ServiceSpec{}
 	spec.TaskTemplate.ContainerSpec = &swarm.ContainerSpec{}
-	if len(serviceCreate.ServiceName) > 10 {
-		spec.Name = serviceCreate.ServiceName[:10]
-		spec.Name += "_" + CreateRandomString(6)
+	pos := len(serviceCreate.ServiceName) - 10
+	if pos < 0 {
+		spec.Name = serviceCreate.ServiceName
+		spec.Name += "_" + CreateRandomString(15-len(serviceCreate.ServiceName))
 	} else {
-		spec.Name = CreateRandomString(10)
+		spec.Name = serviceCreate.ServiceName[:10]
+		spec.Name += "_" + CreateRandomString(5)
 	}
 
 	// parse service labels
 	spec.Labels = make(map[string]string)
-	spec.Labels["com.massgird.deletetime"] = time.Now().UTC().Add(time.Duration(float64(serviceCreate.Amount)/float64(serviceCreate.ServicePrice)*3600.0) * time.Second).String()
+
+	timeScale := time.Duration(float64(serviceCreate.Amount) / float64(serviceCreate.ServicePrice) * float64(time.Hour))
+	DeleteAt := time.Now().UTC().Add(timeScale)
+	spec.Labels["com.massgird.deletetime"] = DeleteAt.String()
 	spec.Labels["com.massgrid.pubkey"] = serviceCreate.Pubkey
 	spec.Labels["com.massgrid.price"] = strconv.FormatInt(serviceCreate.ServicePrice, 10)
 	spec.Labels["com.massgrid.payment"] = strconv.FormatInt(serviceCreate.Amount, 10)

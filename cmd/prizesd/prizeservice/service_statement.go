@@ -55,7 +55,7 @@ func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizest
 	balanceUsableTime := time.Duration(float64(serviceOrder.Balance) / float64(serviceOrder.ServicePrice) * float64(time.Hour))
 
 	logrus.Debug("statement", balanceUsableTime, desiredTime.Sub(serviceOrder.LastStatementTime))
-	if balanceUsableTime <= desiredTime.Sub(serviceOrder.LastStatementTime) { //不够结算
+	if balanceUsableTime <= desiredTime.Sub(serviceOrder.LastStatementTime)+time.Minute { //不够结算
 		statementAt = serviceOrder.LastStatementTime.Add(balanceUsableTime)
 		serviceOrder.OrderState = order.OrderStateHasBeenPaid
 		amount = serviceOrder.Balance

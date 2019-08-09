@@ -33,7 +33,9 @@ func Update(prizeService *service.PrizesService, serviceUpdate *service.ServiceU
 	return &response, nil
 }
 func parseServiceUpdateSpec(dockerservice *swarm.Service, serviceUpdate *service.ServiceUpdate) *swarm.ServiceSpec {
-	dockerservice.Spec.Labels["com.massgird.deletetime"] = dockerservice.Meta.CreatedAt.Add(time.Duration(float64(serviceUpdate.Amount)/float64(serviceUpdate.ServicePrice)*3600.0) * time.Second).String()
+	timeScale := time.Duration(float64(serviceUpdate.Amount) / float64(serviceUpdate.ServicePrice) * float64(time.Hour))
+	DeleteAt := time.Now().UTC().Add(timeScale)
+	dockerservice.Spec.Labels["com.massgird.deletetime"] = DeleteAt.String()
 	num := 1
 	for k, _ := range dockerservice.Spec.Labels {
 		if strings.Contains(k, "com.massgrid.outpoint") {
