@@ -68,10 +68,11 @@ func SendMany(v interface{}) (*string, error) {
 				logrus.Warning(payment.ReceiveAddress, " not massgrid wallet import address")
 				continue
 			}
-			if v, ok := to[payment.ReceiveAddress].(int64); ok {
-				to[payment.ReceiveAddress] = v + payment.Amount
+			amount := float64(payment.Amount) / 100000000
+			if v, ok := to[payment.ReceiveAddress].(float64); ok {
+				to[payment.ReceiveAddress] = v + amount
 			} else {
-				to[payment.ReceiveAddress] = payment.Amount
+				to[payment.ReceiveAddress] = amount
 			}
 		}
 	case *order.RefundInfo:
@@ -80,10 +81,11 @@ func SendMany(v interface{}) (*string, error) {
 				logrus.Warning(payment.ReceiveAddress, " not massgrid wallet import address")
 				continue
 			}
-			if v, ok := to[payment.ReceiveAddress].(int64); ok {
-				to[payment.ReceiveAddress] = v + payment.Amount
+			amount := float64(payment.Amount) / 100000000
+			if v, ok := to[payment.ReceiveAddress].(float64); ok {
+				to[payment.ReceiveAddress] = v + amount
 			} else {
-				to[payment.ReceiveAddress] = payment.Amount
+				to[payment.ReceiveAddress] = amount
 			}
 		}
 		for _, refund := range *value.RefundPay {
@@ -91,10 +93,11 @@ func SendMany(v interface{}) (*string, error) {
 				logrus.Warning(refund.Drawee, " not massgrid wallet import address")
 				continue
 			}
-			if v, ok := to[refund.Drawee].(int64); ok {
-				to[refund.Drawee] = v + refund.TotalAmount
+			amount := float64(refund.TotalAmount) / 100000000
+			if v, ok := to[refund.Drawee].(float64); ok {
+				to[refund.Drawee] = v + amount
 			} else {
-				to[refund.Drawee] = refund.TotalAmount
+				to[refund.Drawee] = amount
 			}
 		}
 	default:
