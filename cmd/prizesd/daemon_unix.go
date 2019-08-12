@@ -16,6 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/wanyvic/gobtclib/client"
+	"github.com/wanyvic/prizes/cmd/db"
+	"github.com/wanyvic/prizes/cmd/db/mongodb"
 	"github.com/wanyvic/prizes/cmd/prizesd/config"
 	"github.com/wanyvic/prizes/cmd/prizesd/massgrid"
 	"github.com/wanyvic/prizes/cmd/prizesd/prizeservice"
@@ -79,19 +81,27 @@ func loadDaemonCliConfig(opts *daemonOptions) (*config.Config, error) {
 	conf := opts.daemonConfig
 	conf.LogLevel = opts.LogLevel
 	refresh.TimeScale = time.Duration(opts.TimeScale) * time.Millisecond
+	logrus.Info("data refresh time duration ", refresh.TimeScale)
 	prizeservice.StatementDuration = time.Duration(opts.TimeStatement) * time.Minute
 	logrus.Info("statement time cycle ", prizeservice.StatementDuration)
 	if opts.TestNet {
 		massgrid.DefaultNetParams = massgrid.DefaultTestNetParams
 		logrus.Info("set massgrid testnet")
 	}
-	if len(opts.MassGridHost) > 0 {
+	if len(opts.RPC.MassGridHost) > 0 {
 		massgrid.DefaultClientConfig = &client.Config{
-			Host: opts.MassGridHost[0],
-			User: opts.Username,
-			Pass: opts.Password,
+			Host: opts.RPC.MassGridHost[0],
+			User: opts.RPC.Username,
+			Pass: opts.RPC.Password,
 		}
-		logrus.Info(fmt.Sprintf("set massgrid rpc host %s username %s password %s\n", opts.MassGridHost, opts.Username, opts.Password))
+		logrus.Info(fmt.Sprintf("set massgrid rpc host %s username %s password %s\n", opts.RPC.MassGridHost, opts.RPC.Username, opts.RPC.Password))
+	}
+	if len(opts.DataBaseHost) > 0 {
+		db.DBimplement = &mongodb.MongDBClient{
+			URI:      opts.DataBaseHost[0],
+			DataBase: db.DBDefaultDataBase,
+		}
+		logrus.Info(fmt.Sprintf("set database host %s\n", opts.DataBaseHost[0]))
 	}
 	return conf, nil
 }
@@ -117,7 +127,6 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	}
 
 	logrus.Info("Starting up")
-	logrus.Info("data refresh time duration: ", refresh.TimeScale)
 	if err := configureServer(opts.Hosts); err != nil {
 		logrus.Warning(err)
 	}

@@ -21,10 +21,10 @@ type DataBase interface {
 	FindPrizesServiceFromPubkey(pubkey string) (*[]service.PrizesService, error)
 }
 
-var (
-	DBimplement DataBase
+const (
+	DBDefaultDataBase = "docker"
 )
 
-func init() {
-	DBimplement = &mongodb.MongDBClient{URI: mongodb.MongoDBDefaultURI, DataBase: mongodb.MongoDBDefaultDataBase}
-}
+var (
+	DBimplement = &mongodb.MongDBClient{URI: mongodb.MongoDBDefaultURI, DataBase: DBDefaultDataBase}
+)
