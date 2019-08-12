@@ -68,7 +68,11 @@ func SendMany(v interface{}) (*string, error) {
 				logrus.Warning(payment.ReceiveAddress, " not massgrid wallet import address")
 				continue
 			}
-			to[payment.ReceiveAddress] = to[payment.ReceiveAddress].(int64) + payment.Amount
+			if v, ok := to[payment.ReceiveAddress].(int64); ok {
+				to[payment.ReceiveAddress] = v + payment.Amount
+			} else {
+				to[payment.ReceiveAddress] = payment.Amount
+			}
 		}
 	case *order.RefundInfo:
 		for _, payment := range value.Statement.Payments {
@@ -76,14 +80,22 @@ func SendMany(v interface{}) (*string, error) {
 				logrus.Warning(payment.ReceiveAddress, " not massgrid wallet import address")
 				continue
 			}
-			to[payment.ReceiveAddress] = to[payment.ReceiveAddress].(int64) + payment.Amount
+			if v, ok := to[payment.ReceiveAddress].(int64); ok {
+				to[payment.ReceiveAddress] = v + payment.Amount
+			} else {
+				to[payment.ReceiveAddress] = payment.Amount
+			}
 		}
 		for _, refund := range *value.RefundPay {
 			if _, err := LocalNormalizePublicKey(refund.Drawee); err != nil {
 				logrus.Warning(refund.Drawee, " not massgrid wallet import address")
 				continue
 			}
-			to[refund.Drawee] = to[refund.Drawee].(int64) + refund.TotalAmount
+			if v, ok := to[refund.Drawee].(int64); ok {
+				to[refund.Drawee] = v + refund.TotalAmount
+			} else {
+				to[refund.Drawee] = refund.TotalAmount
+			}
 		}
 	default:
 		logrus.Error("types error")
