@@ -11,6 +11,7 @@ import (
 	"github.com/wanyvic/prizes/api/types/service"
 	"github.com/wanyvic/prizes/cmd/db"
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
+	"github.com/wanyvic/prizes/cmd/prizesd/massgrid"
 	"github.com/wanyvic/prizes/cmd/prizesd/prizeservice"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh/calculagraph"
@@ -58,10 +59,15 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 	if err != nil {
 		return nil, err
 	}
-	statement, serviceState, err := prizeservice.Statement(prizeService, serviceStatistics, statementAt, order.DefaultStatementOptions)
+	statement, serviceState, err := prizeservice.Statement(prizeService, serviceStatistics, statementAt)
 	if err != nil {
 		return nil, err
 	}
+	hash, err := massgrid.SendMany(statement)
+	if err != nil {
+		return nil, err
+	}
+	statement.StatementTransaction = *hash
 	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
 	if err != nil {
 		return nil, err
@@ -92,6 +98,12 @@ func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
 		return nil, err
 	}
 	refundInfo.RefundPay = prizeservice.Refund(prizeService)
+
+	hash, err := massgrid.SendMany(refundInfo)
+	if err != nil {
+		return nil, err
+	}
+	refundInfo.RefundTransaction = *hash
 	err = serviceRemove(ServiceID)
 	if err != nil {
 		return nil, err

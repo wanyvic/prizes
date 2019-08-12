@@ -6,10 +6,6 @@ import (
 	"github.com/docker/docker/api/types/swarm"
 )
 
-var (
-	DefaultStatementOptions = StatementOptions{StatementDuration: time.Duration(5 * time.Minute), MasterNodeFeeAddress: "masternodeaddr", DevFeeAddress: "DevFeeAddress", MasterNodeFeeRate: 100, DevFeeRate: 100}
-)
-
 type Statement struct {
 	StatementID          string    `json:"statement_id,omitempty"`
 	CreatedAt            time.Time `json:"created_at,omitempty"`
@@ -32,9 +28,8 @@ type Payment struct {
 }
 
 type StatementOptions struct {
-	StatementDuration    time.Duration `json:"statement_duration,omitempty"`
-	MasterNodeFeeRate    int64         `json:"master_node_fee_rate,omitempty"`
-	DevFeeRate           int64         `json:"dev_fee_rate,omitempty"`
-	MasterNodeFeeAddress string        `json:"master_node_fee_address,omitempty"`
-	DevFeeAddress        string        `json:"dev_fee_address,omitempty"`
+	MasterNodeFeeRate    int64  `json:"master_node_fee_rate,omitempty"`
+	DevFeeRate           int64  `json:"dev_fee_rate,omitempty"`
+	MasterNodeFeeAddress string `json:"master_node_fee_address,omitempty"`
+	DevFeeAddress        string `json:"dev_fee_address,omitempty"`
 }
