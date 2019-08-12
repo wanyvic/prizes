@@ -150,7 +150,11 @@ func serviceCreateOrder(p *service.PrizesService, serviceCreate *service.Service
 	serviceOrder.Balance = serviceCreate.Amount
 	serviceOrder.ServicePrice = serviceCreate.ServicePrice
 	serviceOrder.LastStatementTime = p.CreatedAt
-	p.NextCheckTime = p.CreatedAt.Add(order.DefaultStatementOptions.StatementDuration)
+	serviceOrder.MasterNodeFeeRate = serviceCreate.MasterNodeFeeRate
+	serviceOrder.MasterNodeFeeAddress = serviceCreate.MasterNodeFeeAddress
+	serviceOrder.DevFeeRate = serviceCreate.DevFeeRate
+	serviceOrder.DevFeeAddress = serviceCreate.DevFeeAddress
+	p.NextCheckTime = p.CreatedAt.Add(StatementDuration)
 	if p.NextCheckTime.After(p.DeleteAt) {
 		p.NextCheckTime = p.DeleteAt
 	}

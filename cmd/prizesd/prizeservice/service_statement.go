@@ -13,24 +13,28 @@ import (
 	"github.com/wanyvic/prizes/api/types/service"
 )
 
-func Statement(prizeService *service.PrizesService, serviceStatistics prizestypes.ServiceStatistics, desiredTime time.Time, options order.StatementOptions) (*order.Statement, service.ServiceState, error) {
+var (
+	StatementDuration = time.Duration(5 * time.Minute)
+)
+
+func Statement(prizeService *service.PrizesService, serviceStatistics prizestypes.ServiceStatistics, desiredTime time.Time) (*order.Statement, service.ServiceState, error) {
 	var statement *order.Statement
 	for i := 0; i < len(prizeService.Order); i++ {
 		if prizeService.Order[i].OrderState == order.OrderStatePaying {
-			statement := statementOrder(&prizeService.Order[i], &serviceStatistics, desiredTime, &options)
+			statement := statementOrder(&prizeService.Order[i], &serviceStatistics, desiredTime)
 			if prizeService.Order[i].OrderState == order.OrderStateHasBeenPaid {
 				if i == len(prizeService.Order)-1 {
 					prizeService.State = service.ServiceStateCompleted
 				} else {
 					prizeService.Order[i+1].OrderState = order.OrderStatePaying
 					prizeService.Order[i+1].LastStatementTime = prizeService.Order[i].LastStatementTime
-					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(options.StatementDuration)
+					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 					if prizeService.NextCheckTime.After(prizeService.Order[i+1].RemoveAt) {
 						prizeService.NextCheckTime = prizeService.Order[i+1].RemoveAt
 					}
 				}
 			} else {
-				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(options.StatementDuration)
+				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 				if prizeService.NextCheckTime.After(prizeService.Order[i].RemoveAt) {
 					prizeService.NextCheckTime = prizeService.Order[i].RemoveAt
 				}
@@ -40,7 +44,7 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 	}
 	return statement, prizeService.State, errors.New("no order or no order state paying")
 }
-func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizestypes.ServiceStatistics, desiredTime time.Time, options *order.StatementOptions) *order.Statement {
+func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizestypes.ServiceStatistics, desiredTime time.Time) *order.Statement {
 	taskStatisticsColation := []prizestypes.TaskStatistics{}
 	statementAt := desiredTime
 	var statementInfo *order.Statement
@@ -54,16 +58,22 @@ func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizest
 	}
 	balanceUsableTime := time.Duration(float64(serviceOrder.Balance) / float64(serviceOrder.ServicePrice) * float64(time.Hour))
 
+	options := order.StatementOptions{
+		MasterNodeFeeRate:    serviceOrder.MasterNodeFeeRate,
+		DevFeeRate:           serviceOrder.DevFeeRate,
+		MasterNodeFeeAddress: serviceOrder.MasterNodeFeeAddress,
+		DevFeeAddress:        serviceOrder.DevFeeAddress,
+	}
 	logrus.Debug("statement", balanceUsableTime, desiredTime.Sub(serviceOrder.LastStatementTime))
 	if balanceUsableTime <= desiredTime.Sub(serviceOrder.LastStatementTime)+time.Minute { //不够结算
 		statementAt = serviceOrder.LastStatementTime.Add(balanceUsableTime)
 		serviceOrder.OrderState = order.OrderStateHasBeenPaid
 		amount = serviceOrder.Balance
-		statementInfo = parseStatement(taskStatisticsColation, serviceOrder.LastStatementTime, statementAt, amount, options)
+		statementInfo = parseStatement(taskStatisticsColation, serviceOrder.LastStatementTime, statementAt, amount, &options)
 	} else {
 		logrus.Debug("not latest statement")
 		amount = int64(statementAt.Sub(serviceOrder.LastStatementTime).Hours() * float64(serviceOrder.ServicePrice))
-		statementInfo = parseStatement(taskStatisticsColation, serviceOrder.LastStatementTime, statementAt, amount, options)
+		statementInfo = parseStatement(taskStatisticsColation, serviceOrder.LastStatementTime, statementAt, amount, &options)
 	}
 	serviceOrder.Statement = append(serviceOrder.Statement, *statementInfo)
 	serviceOrder.LastStatementTime = statementAt

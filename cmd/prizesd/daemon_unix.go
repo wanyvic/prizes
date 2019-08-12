@@ -15,7 +15,10 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
+	"github.com/wanyvic/gobtclib/client"
 	"github.com/wanyvic/prizes/cmd/prizesd/config"
+	"github.com/wanyvic/prizes/cmd/prizesd/massgrid"
+	"github.com/wanyvic/prizes/cmd/prizesd/prizeservice"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh/calculagraph"
 	httpserver "github.com/wanyvic/prizes/cmd/prizesd/server"
@@ -76,6 +79,20 @@ func loadDaemonCliConfig(opts *daemonOptions) (*config.Config, error) {
 	conf := opts.daemonConfig
 	conf.LogLevel = opts.LogLevel
 	refresh.TimeScale = time.Duration(opts.TimeScale) * time.Millisecond
+	prizeservice.StatementDuration = time.Duration(opts.TimeStatement) * time.Minute
+	logrus.Info("statement time cycle ", prizeservice.StatementDuration)
+	if opts.TestNet {
+		massgrid.DefaultNetParams = massgrid.DefaultTestNetParams
+		logrus.Info("set massgrid testnet")
+	}
+	if len(opts.MassGridHost) > 0 {
+		massgrid.DefaultClientConfig = &client.Config{
+			Host: opts.MassGridHost[0],
+			User: opts.Username,
+			Pass: opts.Password,
+		}
+		logrus.Info(fmt.Sprintf("set massgrid rpc host %s username %s password %s\n", opts.MassGridHost, opts.Username, opts.Password))
+	}
 	return conf, nil
 }
 func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
