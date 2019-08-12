@@ -110,5 +110,5 @@ func main() {
 	if err := cmd.Execute(); err != nil {
 		onError(err)
 	}
-
+	logrus.Info("prizesd exit")
 }

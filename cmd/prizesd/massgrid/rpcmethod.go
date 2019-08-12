@@ -62,7 +62,7 @@ func SendMany(v interface{}) (*string, error) {
 	to := make(map[string]interface{})
 	feeAddress := []string{}
 	switch value := v.(type) {
-	case order.Statement:
+	case *order.Statement:
 		for _, payment := range value.Payments {
 			if _, err := LocalNormalizePublicKey(payment.ReceiveAddress); err != nil {
 				logrus.Warning(payment.ReceiveAddress, " not massgrid wallet import address")
@@ -70,7 +70,7 @@ func SendMany(v interface{}) (*string, error) {
 			}
 			to[payment.ReceiveAddress] = to[payment.ReceiveAddress].(int64) + payment.Amount
 		}
-	case order.RefundInfo:
+	case *order.RefundInfo:
 		for _, payment := range value.Statement.Payments {
 			if _, err := LocalNormalizePublicKey(payment.ReceiveAddress); err != nil {
 				logrus.Warning(payment.ReceiveAddress, " not massgrid wallet import address")

@@ -94,14 +94,14 @@ func loadDaemonCliConfig(opts *daemonOptions) (*config.Config, error) {
 			User: opts.RPC.Username,
 			Pass: opts.RPC.Password,
 		}
-		logrus.Info(fmt.Sprintf("set massgrid rpc host %s username %s password %s\n", opts.RPC.MassGridHost, opts.RPC.Username, opts.RPC.Password))
+		logrus.Info(fmt.Sprintf("set massgrid rpc host %s username %s password %s", opts.RPC.MassGridHost, opts.RPC.Username, opts.RPC.Password))
 	}
 	if len(opts.DataBaseHost) > 0 {
 		db.DBimplement = &mongodb.MongDBClient{
 			URI:      opts.DataBaseHost[0],
 			DataBase: db.DBDefaultDataBase,
 		}
-		logrus.Info(fmt.Sprintf("set database host %s\n", opts.DataBaseHost[0]))
+		logrus.Info(fmt.Sprintf("set database host %s", opts.DataBaseHost[0]))
 	}
 	return conf, nil
 }
