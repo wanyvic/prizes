@@ -99,7 +99,7 @@ func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
 	}
 	refundInfo.RefundPay = prizeservice.Refund(prizeService)
 
-	hash, err := massgrid.SendMany(refundInfo)
+	hash, err := massgrid.SendMany(&refundInfo)
 	if err != nil {
 		return nil, err
 	}
