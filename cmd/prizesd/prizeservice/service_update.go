@@ -16,7 +16,7 @@ import (
 )
 
 func Update(prizeService *service.PrizesService, serviceUpdate *service.ServiceUpdate) (*types.ServiceUpdateResponse, error) {
-	logrus.Info("PrizesService Create")
+	logrus.Info("PrizesService Update")
 	cli, err := dockerapi.GetDockerClient()
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func Update(prizeService *service.PrizesService, serviceUpdate *service.ServiceU
 	}
 	serviceUpdateOrder(prizeService, serviceUpdate)
 
-	logrus.Info(fmt.Sprintf("CreateService completed: ID: %s ,Warning: %s", serviceUpdate.ServiceID, response.Warnings))
+	logrus.Info(fmt.Sprintf("UpdateService completed: ID: %s ,Warning: %s", serviceUpdate.ServiceID, response.Warnings))
 	return &response, nil
 }
 func parseServiceUpdateSpec(dockerservice *swarm.Service, serviceUpdate *service.ServiceUpdate) *swarm.ServiceSpec {

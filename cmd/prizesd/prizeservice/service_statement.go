@@ -78,7 +78,7 @@ func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizest
 	serviceOrder.Statement = append(serviceOrder.Statement, *statementInfo)
 	serviceOrder.LastStatementTime = statementAt
 	serviceOrder.Balance -= amount
-	return statementInfo
+	return &serviceOrder.Statement[len(serviceOrder.Statement)-1]
 }
 
 func parseStatement(taskStatisticsColation []prizestypes.TaskStatistics, statementStartAt time.Time, statementEndAt time.Time, amount int64, options *order.StatementOptions) *order.Statement {

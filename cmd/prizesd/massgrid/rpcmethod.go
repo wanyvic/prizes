@@ -114,7 +114,7 @@ func SendMany(v interface{}) (*string, error) {
 		logrus.Error("sendmany request error ", err)
 		return nil, err
 	}
-	logrus.Info("sendmany successful ", hash)
+	logrus.Info("sendmany successful ", *hash)
 	return hash, nil
 }
 func LocalNormalizePublicKey(address string) (string, error) {
