@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -55,6 +56,9 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 	if err != nil {
 		return nil, err
 	}
+	if prizeService.State == service.ServiceStateCompleted {
+		return nil, errors.New("service has been statement")
+	}
 	serviceStatistics, err := ServiceState(ServiceID, statementAt)
 	if err != nil {
 		return nil, err
@@ -89,11 +93,14 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
 	var err error
 	refundInfo := order.RefundInfo{}
-	refundInfo.Statement, err = ServiceStatement(ServiceID, time.Now().UTC())
+	prizeService, err := db.DBimplement.FindPrizesServiceOne(ServiceID)
 	if err != nil {
 		return nil, err
 	}
-	prizeService, err := db.DBimplement.FindPrizesServiceOne(ServiceID)
+	if prizeService.State == service.ServiceStateCompleted {
+		return nil, errors.New("service has been paid")
+	}
+	refundInfo.Statement, err = ServiceStatement(ServiceID, time.Now().UTC())
 	if err != nil {
 		return nil, err
 	}

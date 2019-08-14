@@ -46,6 +46,7 @@ func ServiceCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	response, err := cmd.ServiceCreate(&serviceCreate)
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -84,6 +85,7 @@ func ServiceUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	response, err := cmd.ServiceUpdate(&serviceUpdate)
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -102,6 +104,7 @@ func ServiceStatement(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	statement, err := cmd.ServiceStatement(serviceID, time.Now().UTC())
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -119,6 +122,7 @@ func ServiceRefund(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	refunInfo, err := cmd.ServiceRefund(serviceID)
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -136,6 +140,7 @@ func GetService(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	serviceInfo, err := cmd.ServiceInfo(serviceID)
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -153,6 +158,7 @@ func GetServicesFromPubkey(w http.ResponseWriter, r *http.Request) {
 	pubkey := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	serviceInfoList, err := cmd.GetServicesFromPubkey(pubkey)
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -170,6 +176,7 @@ func GetNode(w http.ResponseWriter, r *http.Request) {
 	NodeID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	node, err := cmd.GetNodeInfo(NodeID)
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -186,6 +193,7 @@ func GetNode(w http.ResponseWriter, r *http.Request) {
 func GetNodeList(w http.ResponseWriter, r *http.Request) {
 	nodeListStatistics, err := cmd.GetNodeList()
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
@@ -203,6 +211,7 @@ func GetServiceState(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	serviceStatistics, err := cmd.ServiceState(serviceID, time.Now().UTC())
 	if err != nil {
+		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, parseError(err))
 		return
