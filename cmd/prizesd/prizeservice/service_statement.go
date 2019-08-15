@@ -61,7 +61,7 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 
 //Statement order
 func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizestypes.ServiceStatistics, LastCheckTime time.Time, NewCheckTime time.Time) (*order.Statement, order.OrderState) {
-	var TotalUseTime time.Duration
+	TotalUseTime := time.Duration(0)
 	taskStatisticsColation := serviceStatistics.TaskList
 	amount := int64(0)
 	options := order.StatementOptions{
@@ -73,7 +73,11 @@ func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizest
 
 	// compute actually task running time
 	for _, taskStatistic := range taskStatisticsColation {
-		TotalUseTime += taskStatistic.EndAt.Sub(LastCheckTime)
+		if taskStatistic.StartAt.Before(LastCheckTime) {
+			TotalUseTime += taskStatistic.EndAt.Sub(LastCheckTime)
+		} else {
+			TotalUseTime += taskStatistic.EndAt.Sub(taskStatistic.StartAt)
+		}
 	}
 	// compute statement amount
 	amount = int64(TotalUseTime.Hours() * float64(serviceOrder.ServicePrice))
