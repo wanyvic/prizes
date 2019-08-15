@@ -3,6 +3,7 @@ package massgrid
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -106,6 +107,9 @@ func SendMany(v interface{}) (*string, error) {
 	}
 	for k, _ := range to {
 		feeAddress = append(feeAddress, k)
+	}
+	for key, value := range to {
+		to[key], _ = strconv.ParseFloat(fmt.Sprintf("%.6f", value), 64)
 	}
 	cli := NewClientWithoutOpts()
 	defer cli.Shutdown()

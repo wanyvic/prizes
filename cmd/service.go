@@ -65,13 +65,15 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 	}
 	statement, serviceState, err := prizeservice.Statement(prizeService, serviceStatistics, prizeService.LastCheckTime, statementAt)
 	if err != nil {
-		return nil, err
+		logrus.Warning(err)
 	}
-	hash, err := massgrid.SendMany(statement)
-	if err != nil {
-		return nil, err
+	if statement != nil {
+		hash, err := massgrid.SendMany(statement)
+		if err != nil {
+			return nil, err
+		}
+		statement.StatementTransaction = *hash
 	}
-	statement.StatementTransaction = *hash
 	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
 	if err != nil {
 		return nil, err

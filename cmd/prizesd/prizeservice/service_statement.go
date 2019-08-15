@@ -18,12 +18,21 @@ var (
 )
 
 func Statement(prizeService *service.PrizesService, serviceStatistics prizestypes.ServiceStatistics, LastCheckTime time.Time, NewCheckTime time.Time) (*order.Statement, service.ServiceState, error) {
-	var statement *order.Statement
 	if NewCheckTime.After(time.Now().UTC()) {
 		return nil, service.ServiceStateUnknown, errors.New("time is too early to statement")
 	}
+
 	for i := 0; i < len(prizeService.Order); i++ {
 		if prizeService.Order[i].OrderState == order.OrderStatePaying {
+
+			if len(serviceStatistics.TaskList) <= 0 {
+				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
+				prizeService.LastCheckTime = prizeService.Order[i].LastStatementTime
+				if prizeService.NextCheckTime.After(prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)) {
+					prizeService.NextCheckTime = prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)
+				}
+				return nil, service.ServiceStateUnknown, errors.New("no task need be statement")
+			}
 			statement, orderState := statementOrder(&prizeService.Order[i], &serviceStatistics, LastCheckTime, NewCheckTime)
 			if orderState == order.OrderStateHasBeenPaid {
 				if i == len(prizeService.Order)-1 {
@@ -47,7 +56,7 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 			return statement, prizeService.State, nil
 		}
 	}
-	return statement, prizeService.State, errors.New("no order or no order state paying")
+	return nil, service.ServiceStateUnknown, errors.New("no order or no order state paying")
 }
 
 //Statement order
