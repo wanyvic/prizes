@@ -171,7 +171,7 @@ func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.
 					continue
 				}
 			}
-			if task.DesiredState == swarm.TaskStateRunning {
+			if task.Status.State == swarm.TaskStateRunning {
 				logrus.Debug("updateTimeAxis new asis")
 				axis := prizeservice.StateTimeAxis{
 					TaskID:       task.ID,
