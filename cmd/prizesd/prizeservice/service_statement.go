@@ -72,7 +72,7 @@ func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizest
 
 	// compute actually task running time
 	for _, taskStatistic := range taskStatisticsColation {
-		TotalUseTime += taskStatistic.EndAt.Sub(LastCheckTime)
+		TotalUseTime += taskStatistic.EndAt.Sub(taskStatistic.StartAt)
 	}
 	// compute statement amount
 	amount = int64(TotalUseTime.Hours() * float64(serviceOrder.ServicePrice))
