@@ -2,6 +2,7 @@ package refresh
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -119,7 +120,11 @@ func (r *RefreshMoudle) refreshDockerService() error {
 		serviceTime, err := db.DBimplement.FindStateTimeAxisOne(service.ID)
 		if err != nil {
 			logrus.Warning(err)
-			serviceTime = &prizeservice.ServiceTimeLine{ServiceID: service.ID}
+			if strings.Contains(err.Error(), "no documents in result") {
+				serviceTime = &prizeservice.ServiceTimeLine{ServiceID: service.ID}
+			} else {
+				return err
+			}
 		}
 		serviceTime = updateTimeAxis(serviceTime, tasklist)
 		// logrus.Debug("\tservice: ", service.ID)
@@ -155,10 +160,10 @@ func (r *RefreshMoudle) refreshDockerNode() error {
 }
 func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.Task) *prizeservice.ServiceTimeLine {
 	for _, task := range tasklist {
-		if task.DesiredState == swarm.TaskStateRunning {
+		if task.DesiredState == swarm.TaskStateRunning && task.Status.State == swarm.TaskStateRunning {
 			if len(serviceTime.TimeAxis) > 0 {
 				lastAxisgo := &serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1]
-				if lastAxisgo.TaskID != task.ID || lastAxisgo.Version != task.Version.Index || lastAxisgo.DesiredState != task.DesiredState || lastAxisgo.StatusState != task.Status.State {
+				if lastAxisgo.TaskID != task.ID || lastAxisgo.Version != task.Version.Index {
 					nowTime := time.Now().UTC()
 					lastAxisgo.EndAt = nowTime
 				} else {
