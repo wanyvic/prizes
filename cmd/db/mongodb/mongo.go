@@ -101,7 +101,7 @@ func (m *MongDBClient) UpdateStateTimeAxisOne(axis service.ServiceTimeLine) (boo
 	updateOption := options.UpdateOptions{}
 	updateOption.SetUpsert(true)
 	collection := m.mongoDBReader.Database(m.DataBase).Collection("servicetimeaxis")
-	_, err := collection.UpdateOne(context.Background(), bson.D{{"id", axis.ServiceID}}, bson.D{{"$set", axis}}, &updateOption)
+	_, err := collection.UpdateOne(context.Background(), bson.D{{"serviceid", axis.ServiceID}}, bson.D{{"$set", axis}}, &updateOption)
 	if err != nil {
 		return false, err
 	}
@@ -166,7 +166,7 @@ func (m *MongDBClient) FindStateTimeAxisOne(serviceID string) (*service.ServiceT
 	}
 	collection := m.mongoDBReader.Database(m.DataBase).Collection("servicetimeaxis")
 
-	if err := collection.FindOne(context.Background(), bson.D{{"id", serviceID}}).Decode(&axis); err != nil {
+	if err := collection.FindOne(context.Background(), bson.D{{"serviceid", serviceID}}).Decode(&axis); err != nil {
 		return nil, err
 	}
 	return &axis, nil
