@@ -94,6 +94,19 @@ func (m *MongDBClient) UpdateServiceOne(service swarm.Service) (bool, error) {
 	}
 	return true, nil
 }
+func (m *MongDBClient) UpdateStateTimeAxisOne(axis service.ServiceTimeLine) (bool, error) {
+	if err := m.RefreshMongoDBConnection(); err != nil {
+		return false, err
+	}
+	updateOption := options.UpdateOptions{}
+	updateOption.SetUpsert(true)
+	collection := m.mongoDBReader.Database(m.DataBase).Collection("servicetimeaxis")
+	_, err := collection.UpdateOne(context.Background(), bson.D{{"id", axis.ServiceID}}, bson.D{{"$set", axis}}, &updateOption)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
 func (m *MongDBClient) UpdatePrizesServiceOne(service service.PrizesService) (bool, error) {
 	if err := m.RefreshMongoDBConnection(); err != nil {
 		return false, err
@@ -144,6 +157,19 @@ func (m *MongDBClient) FindServiceOne(serviceID string) (*swarm.Service, error) 
 		return nil, err
 	}
 	return &service, nil
+}
+
+func (m *MongDBClient) FindStateTimeAxisOne(serviceID string) (*service.ServiceTimeLine, error) {
+	var axis service.ServiceTimeLine
+	if err := m.RefreshMongoDBConnection(); err != nil {
+		return nil, err
+	}
+	collection := m.mongoDBReader.Database(m.DataBase).Collection("servicetimeaxis")
+
+	if err := collection.FindOne(context.Background(), bson.D{{"id", serviceID}}).Decode(&axis); err != nil {
+		return nil, err
+	}
+	return &axis, nil
 }
 
 func (m *MongDBClient) FindPrizesServiceOne(serviceID string) (*service.PrizesService, error) {

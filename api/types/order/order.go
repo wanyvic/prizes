@@ -19,6 +19,7 @@ type ServiceOrder struct {
 	DevFeeAddress        string         `json:"dev_fee_address,omitempty"`
 	Drawee               string         `json:"drawee,omitempty"`
 	Balance              int64          `json:"balance"`
+	PayAmount            int64          `json:"pay_amount"`
 	LastStatementTime    time.Time      `json:"last_statement_time,omitempty"`
 	Statement            []Statement    `json:"statement,omitempty"`
 	Refund               *RefundPayment `json:"refund,omitempty"`

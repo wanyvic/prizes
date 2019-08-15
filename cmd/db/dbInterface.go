@@ -12,11 +12,13 @@ type DataBase interface {
 	InsertTaskOne(swarm.Task) (bool, error)
 	UpdateNodeOne(swarm.Node) (bool, error)
 	UpdateServiceOne(swarm.Service) (bool, error)
+	UpdateStateTimeAxisOne(service.ServiceTimeLine) (bool, error)
 	UpdatePrizesServiceOne(service.PrizesService) (bool, error)
 	UpdateTaskOne(swarm.Task) (bool, error)
 	FindNodeOne(NodeID string) (*swarm.Node, error)
 	FindServiceOne(serviceID string) (*swarm.Service, error)
 	FindPrizesServiceOne(serviceID string) (*service.PrizesService, error)
+	FindStateTimeAxisOne(serviceID string) (*service.ServiceTimeLine, error)
 	FindTaskList(serviceID string) (*[]swarm.Task, error)
 	FindPrizesServiceFromPubkey(pubkey string) (*[]service.PrizesService, error)
 }

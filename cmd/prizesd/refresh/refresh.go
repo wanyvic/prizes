@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/sirupsen/logrus"
+	prizeservice "github.com/wanyvic/prizes/api/types/service"
 	"github.com/wanyvic/prizes/cmd/db"
+	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 )
 
 const (
@@ -107,9 +107,26 @@ func (r *RefreshMoudle) refreshDockerService() error {
 	if err != nil {
 		return err
 	}
+
 	for _, service := range servicelist {
+		validNameFilter := filters.NewArgs()
+		validNameFilter.Add("service", service.ID)
+		tasklist, err := cli.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
+		if err != nil {
+			return err
+		}
+
+		serviceTime, err := db.DBimplement.FindStateTimeAxisOne(service.ID)
+		if err != nil {
+			logrus.Warning(err)
+			serviceTime = &prizeservice.ServiceTimeLine{ServiceID: service.ID}
+		}
+		serviceTime = updateTimeAxis(serviceTime, tasklist)
 		// logrus.Debug("\tservice: ", service.ID)
 		if _, err := db.DBimplement.UpdateServiceOne(service); err != nil {
+			return err
+		}
+		if _, err := db.DBimplement.UpdateStateTimeAxisOne(*serviceTime); err != nil {
 			return err
 		}
 		if err := r.refreshDockerTaskFromService(service.ID); err != nil {
@@ -135,4 +152,33 @@ func (r *RefreshMoudle) refreshDockerNode() error {
 		}
 	}
 	return nil
+}
+func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.Task) *prizeservice.ServiceTimeLine {
+	for _, task := range tasklist {
+		if task.DesiredState == swarm.TaskStateRunning {
+			if len(serviceTime.TimeAxis) > 0 {
+				lastAxisgo := &serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1]
+				if lastAxisgo.TaskID != task.ID || lastAxisgo.Version != task.Version.Index || lastAxisgo.DesiredState != task.DesiredState || lastAxisgo.StatusState != task.Status.State {
+					nowTime := time.Now().UTC()
+					lastAxisgo.EndAt = nowTime
+				} else {
+					logrus.Debug("updateTimeAxis same")
+					continue
+				}
+			}
+			logrus.Debug("updateTimeAxis new asis")
+			axis := prizeservice.StateTimeAxis{
+				TaskID:       task.ID,
+				Version:      task.Meta.Version.Index,
+				StartAt:      time.Now().UTC(),
+				DesiredState: task.DesiredState,
+				StatusState:  task.Status.State,
+				Msg:          task.Status.Message,
+				Err:          task.Status.Err,
+			}
+			serviceTime.TimeAxis = append(serviceTime.TimeAxis, axis)
+			break
+		}
+	}
+	return serviceTime
 }

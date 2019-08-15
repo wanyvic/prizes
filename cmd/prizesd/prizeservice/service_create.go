@@ -148,6 +148,7 @@ func serviceCreateOrder(p *service.PrizesService, serviceCreate *service.Service
 	serviceOrder.OrderState = order.OrderStatePaying
 	serviceOrder.Drawee = serviceCreate.Drawee
 	serviceOrder.Balance = serviceCreate.Amount
+	serviceOrder.PayAmount = serviceCreate.Amount
 	serviceOrder.ServicePrice = serviceCreate.ServicePrice
 	serviceOrder.LastStatementTime = p.CreatedAt
 	serviceOrder.MasterNodeFeeRate = serviceCreate.MasterNodeFeeRate

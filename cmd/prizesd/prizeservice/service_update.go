@@ -60,6 +60,7 @@ func serviceUpdateOrder(p *service.PrizesService, serviceUpdate *service.Service
 	serviceOrder.RemoveAt = p.DeleteAt
 	serviceOrder.OrderState = order.OrderStateWaitToPay
 	serviceOrder.Balance = serviceUpdate.Amount
+	serviceOrder.PayAmount = serviceUpdate.Amount
 	serviceOrder.MasterNodeFeeRate = serviceUpdate.MasterNodeFeeRate
 	serviceOrder.MasterNodeFeeAddress = serviceUpdate.MasterNodeFeeAddress
 	serviceOrder.DevFeeRate = serviceUpdate.DevFeeRate

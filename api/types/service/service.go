@@ -7,6 +7,21 @@ import (
 	"github.com/wanyvic/prizes/api/types/order"
 )
 
+type StateTimeAxis struct {
+	TaskID       string
+	Version      uint64
+	StartAt      time.Time
+	EndAt        time.Time
+	DesiredState swarm.TaskState
+	StatusState  swarm.TaskState
+	Msg          string
+	Err          string
+}
+type ServiceTimeLine struct {
+	ServiceID string
+	TimeAxis  []StateTimeAxis
+}
+
 //PrizesService includes order createSpec updateSpec and etc.
 type PrizesService struct {
 	DockerService swarm.Service
