@@ -24,6 +24,9 @@ func ServiceState(serviceID string, startTime time.Time, endTime time.Time) (typ
 		if timeAxis.EndAt.Before(time.Unix(0, 0).UTC()) {
 			timeAxis.EndAt = endTime
 		}
+		if timeAxis.StartAt.Before(startTime) {
+			timeAxis.StartAt = startTime
+		}
 		if timeAxis.EndAt.After(startTime) {
 			var strAddr string
 			pAddr, _ := getAddress(timeAxis.NodeID)
