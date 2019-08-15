@@ -163,7 +163,7 @@ func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.
 		if task.DesiredState == swarm.TaskStateRunning && task.Status.State == swarm.TaskStateRunning {
 			if len(serviceTime.TimeAxis) > 0 {
 				lastAxisgo := &serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1]
-				if lastAxisgo.TaskID != task.ID || lastAxisgo.Version != task.Version.Index {
+				if lastAxisgo.TaskID != task.ID {
 					nowTime := time.Now().UTC()
 					lastAxisgo.EndAt = nowTime
 				} else {
