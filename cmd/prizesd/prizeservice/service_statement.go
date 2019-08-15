@@ -40,8 +40,8 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 			} else {
 				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 				prizeService.LastCheckTime = prizeService.Order[i].LastStatementTime
-				if prizeService.NextCheckTime.After(prizeService.Order[i].CreatedAt.Add(prizeService.Order[i+1].TotalTimeDuration)) {
-					prizeService.NextCheckTime = prizeService.Order[i].CreatedAt.Add(prizeService.Order[i+1].TotalTimeDuration)
+				if prizeService.NextCheckTime.After(prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)) {
+					prizeService.NextCheckTime = prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)
 				}
 			}
 			return statement, prizeService.State, nil

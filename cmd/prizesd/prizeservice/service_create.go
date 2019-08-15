@@ -155,6 +155,7 @@ func serviceCreateOrder(p *service.PrizesService, serviceCreate *service.Service
 	serviceOrder.MasterNodeFeeAddress = serviceCreate.MasterNodeFeeAddress
 	serviceOrder.DevFeeRate = serviceCreate.DevFeeRate
 	serviceOrder.DevFeeAddress = serviceCreate.DevFeeAddress
+	p.LastCheckTime = p.CreatedAt
 	p.NextCheckTime = p.CreatedAt.Add(StatementDuration)
 	if p.NextCheckTime.After(p.CreatedAt.Add(timeScale)) {
 		p.NextCheckTime = p.CreatedAt.Add(timeScale)
