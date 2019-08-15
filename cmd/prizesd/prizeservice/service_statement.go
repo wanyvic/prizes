@@ -7,7 +7,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/docker/docker/api/types/swarm"
 	prizestypes "github.com/wanyvic/prizes/api/types"
 	"github.com/wanyvic/prizes/api/types/order"
 	"github.com/wanyvic/prizes/api/types/service"
@@ -125,12 +124,6 @@ func parseStatement(taskStatisticsColation []prizestypes.TaskStatistics, stateme
 	}
 	amount = amount - masterNodeAmount - DevAmount
 	for _, taskInfo := range taskStatisticsColation {
-		if taskInfo.StartAt.Before(statementStartAt) {
-			taskInfo.StartAt = statementStartAt
-		}
-		if taskInfo.State == swarm.TaskStateRunning {
-			taskInfo.EndAt = statementEndAt
-		}
 		useTime := time.Duration(taskInfo.EndAt.Sub(taskInfo.StartAt))
 		taskAmount := int64(float64(amount)*useTime.Hours()/TotalUseTime.Hours() + 0.5)
 		var msg string
