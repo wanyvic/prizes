@@ -82,6 +82,7 @@ func statementOrder(serviceOrder *order.ServiceOrder, serviceStatistics *prizest
 	}
 	statementInfo := parseStatement(taskStatisticsColation, LastCheckTime, NewCheckTime, amount, &options)
 
+	statementInfo.TotalUseTime = TotalUseTime
 	serviceOrder.Statement = append(serviceOrder.Statement, *statementInfo)
 	serviceOrder.LastStatementTime = NewCheckTime
 	serviceOrder.Balance -= amount

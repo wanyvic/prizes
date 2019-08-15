@@ -7,17 +7,18 @@ import (
 )
 
 type Statement struct {
-	StatementID          string    `json:"statement_id,omitempty"`
-	CreatedAt            time.Time `json:"created_at,omitempty"`
-	StatementStartAt     time.Time `json:"statement_start_at,omitempty"`
-	StatementEndAt       time.Time `json:"statement_end_at,omitempty"`
-	TotalAmount          int64     `json:"total_amount,omitempty"`
-	MasterNodeFeeRate    int64     `json:"master_node_fee_rate,omitempty"`
-	DevFeeRate           int64     `json:"dev_fee_rate,omitempty"` //max 10000
-	MasterNodeFeeAddress string    `json:"master_node_fee_address,omitempty"`
-	DevFeeAddress        string    `json:"dev_fee_address,omitempty"`
-	StatementTransaction string    `json:"statement_transaction,omitempty"`
-	Payments             []Payment `json:"payments,omitempty"`
+	StatementID          string        `json:"statement_id,omitempty"`
+	CreatedAt            time.Time     `json:"created_at,omitempty"`
+	StatementStartAt     time.Time     `json:"statement_start_at,omitempty"`
+	StatementEndAt       time.Time     `json:"statement_end_at,omitempty"`
+	TotalAmount          int64         `json:"total_amount"`
+	TotalUseTime         time.Duration `json:"total_use_time"`
+	MasterNodeFeeRate    int64         `json:"master_node_fee_rate,omitempty"`
+	DevFeeRate           int64         `json:"dev_fee_rate,omitempty"` //max 10000
+	MasterNodeFeeAddress string        `json:"master_node_fee_address,omitempty"`
+	DevFeeAddress        string        `json:"dev_fee_address,omitempty"`
+	StatementTransaction string        `json:"statement_transaction,omitempty"`
+	Payments             []Payment     `json:"payments,omitempty"`
 }
 type Payment struct {
 	ReceiveAddress string          `json:"receive_address,omitempty"`
