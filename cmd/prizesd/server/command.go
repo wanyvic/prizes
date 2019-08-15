@@ -209,7 +209,7 @@ func GetNodeList(w http.ResponseWriter, r *http.Request) {
 }
 func GetServiceState(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	serviceStatistics, err := cmd.ServiceState(serviceID, time.Now().UTC())
+	serviceStatistics, err := cmd.ServiceState(serviceID, time.Unix(0, 0).UTC(), time.Now().UTC())
 	if err != nil {
 		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)

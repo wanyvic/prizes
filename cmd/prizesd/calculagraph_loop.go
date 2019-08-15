@@ -12,7 +12,7 @@ import (
 func CheckCalculagraph() error {
 	sign := refresh.NewSign()
 	for {
-		logrus.Debug("CheckCalculagraph loop")
+		// logrus.Debug("CheckCalculagraph loop")
 		if len(calculagraph.PrioritySequence) > 0 {
 			if calculagraph.PrioritySequence[len(calculagraph.PrioritySequence)-1].CheckAt.Before(time.Now().UTC()) {
 				item := calculagraph.Pop()

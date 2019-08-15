@@ -20,7 +20,6 @@ func ServiceInfo(prizeService *service.PrizesService) (*service.ServiceInfo, err
 	serviceInfo := &service.ServiceInfo{}
 	serviceInfo.ServiceID = prizeService.DockerService.ID
 	serviceInfo.CreatedAt = prizeService.CreatedAt
-	serviceInfo.DeleteAt = prizeService.DeleteAt
 	serviceInfo.NextCheckTime = prizeService.NextCheckTime
 	serviceInfo.Order = prizeService.Order
 	serviceInfo.CreateSpec = prizeService.CreateSpec

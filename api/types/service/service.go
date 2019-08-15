@@ -10,6 +10,7 @@ import (
 type StateTimeAxis struct {
 	TaskID       string
 	Version      uint64
+	NodeID       string
 	StartAt      time.Time
 	EndAt        time.Time
 	DesiredState swarm.TaskState
@@ -30,7 +31,7 @@ type PrizesService struct {
 	Order         []order.ServiceOrder
 	State         ServiceState
 	CreatedAt     time.Time
-	DeleteAt      time.Time
+	LastCheckTime time.Time
 	NextCheckTime time.Time
 }
 

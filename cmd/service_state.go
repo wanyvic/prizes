@@ -5,54 +5,47 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/docker/docker/api/types/swarm"
 	"github.com/sirupsen/logrus"
 	"github.com/wanyvic/prizes/api/types"
 	"github.com/wanyvic/prizes/cmd/db"
 )
 
 //ServiceState returns ServiceStatistics error
-func ServiceState(serviceID string, statementAt time.Time) (types.ServiceStatistics, error) {
+func ServiceState(serviceID string, startTime time.Time, endTime time.Time) (types.ServiceStatistics, error) {
 	logrus.Debug("ServiceState: ", serviceID)
 	var serviceStatistics types.ServiceStatistics
-	service, err := db.DBimplement.FindServiceOne(serviceID)
-	if err != nil {
-		return serviceStatistics, err
-	}
-	taskList, err := db.DBimplement.FindTaskList(service.ID)
+	serviceTimeAxis, err := db.DBimplement.FindStateTimeAxisOne(serviceID)
 	if err != nil {
 		return serviceStatistics, err
 	}
 	serviceStatistics.ServiceID = serviceID
-	serviceStatistics.CreatedAt = service.Meta.CreatedAt
 	var taskStatistics []types.TaskStatistics
-
-	for _, task := range *taskList {
-		removeTime := task.Status.Timestamp
-		if task.DesiredState != swarm.TaskStateShutdown {
-			removeTime = statementAt
-			serviceStatistics.State = swarm.TaskStateRunning
+	for _, timeAxis := range serviceTimeAxis.TimeAxis {
+		if timeAxis.EndAt.Before(time.Unix(0, 0).UTC()) {
+			timeAxis.EndAt = endTime
 		}
-		var strAddr string
-		p_Addr, _ := getAddress(task.NodeID)
-		if p_Addr != nil {
-			strAddr = *p_Addr
+		if timeAxis.EndAt.After(startTime) {
+			var strAddr string
+			pAddr, _ := getAddress(timeAxis.NodeID)
+			if pAddr != nil {
+				strAddr = *pAddr
+			}
+			taskStatistics = append(taskStatistics,
+				types.TaskStatistics{
+					TaskID:         timeAxis.TaskID,
+					NodeID:         timeAxis.NodeID,
+					StartAt:        timeAxis.StartAt,
+					EndAt:          timeAxis.EndAt,
+					ReceiveAddress: strAddr,
+					State:          timeAxis.StatusState,
+					Msg:            timeAxis.Msg,
+					Err:            timeAxis.Err,
+					DesiredState:   timeAxis.DesiredState,
+				})
+			logrus.Debug(fmt.Sprintf("%s %s %s %s %s %s %s ", timeAxis.TaskID, timeAxis.NodeID, timeAxis.StartAt, timeAxis.EndAt, timeAxis.EndAt.Sub(timeAxis.StartAt), timeAxis.DesiredState, strAddr))
 		}
-		taskStatistics = append(taskStatistics,
-			types.TaskStatistics{
-				TaskID:         task.ID,
-				NodeID:         task.NodeID,
-				CreatedAt:      task.Meta.CreatedAt,
-				RemoveAt:       removeTime,
-				ReceiveAddress: strAddr,
-				State:          task.Status.State,
-				Msg:            task.Status.Message,
-				Err:            task.Status.Err,
-				DesiredState:   task.DesiredState,
-			})
-		logrus.Debug(fmt.Sprintf("%s %s %s %s %s %s %s ", task.ID, task.NodeID, task.Meta.CreatedAt, removeTime, removeTime.Sub(task.CreatedAt), task.DesiredState, strAddr))
 	}
-	logrus.Info(fmt.Sprintf("serviceStatistics %s CreatedAt %s usetime %s state %s", serviceID, serviceStatistics.CreatedAt, statementAt.Sub(serviceStatistics.CreatedAt), serviceStatistics.State))
+	logrus.Info(fmt.Sprintf("serviceStatistics %s CreatedAt %s usetime %s", serviceID, serviceStatistics.StartAt, endTime.Sub(serviceStatistics.EndAt)))
 	serviceStatistics.TaskList = taskStatistics
 	return serviceStatistics, nil
 }

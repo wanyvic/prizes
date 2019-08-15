@@ -59,11 +59,11 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 	if prizeService.State == service.ServiceStateCompleted {
 		return nil, errors.New("service has been statement")
 	}
-	serviceStatistics, err := ServiceState(ServiceID, statementAt)
+	serviceStatistics, err := ServiceState(ServiceID, prizeService.LastCheckTime, statementAt)
 	if err != nil {
 		return nil, err
 	}
-	statement, serviceState, err := prizeservice.Statement(prizeService, serviceStatistics, statementAt)
+	statement, serviceState, err := prizeservice.Statement(prizeService, serviceStatistics, prizeService.LastCheckTime, statementAt)
 	if err != nil {
 		return nil, err
 	}

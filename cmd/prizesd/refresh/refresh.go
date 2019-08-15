@@ -39,7 +39,7 @@ func (r *RefreshMoudle) Start() {
 func (r *RefreshMoudle) whileLoop() error {
 	sign := NewSign()
 	for {
-		logrus.Debug("Refreshing docker data to database")
+		// logrus.Debug("Refreshing docker data to database")
 		if err := r.refreshDockerNode(); err != nil {
 			logrus.Error(err.Error())
 		}
@@ -176,6 +176,7 @@ func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.
 				axis := prizeservice.StateTimeAxis{
 					TaskID:       task.ID,
 					Version:      task.Meta.Version.Index,
+					NodeID:       task.NodeID,
 					StartAt:      time.Now().UTC(),
 					DesiredState: task.DesiredState,
 					StatusState:  task.Status.State,

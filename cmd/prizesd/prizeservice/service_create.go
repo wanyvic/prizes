@@ -139,16 +139,16 @@ func serviceCreateOrder(p *service.PrizesService, serviceCreate *service.Service
 	p.State = service.ServiceStateRunning
 	p.CreatedAt = p.DockerService.Meta.CreatedAt
 	timeScale := time.Duration(float64(serviceCreate.Amount) / float64(serviceCreate.ServicePrice) * float64(time.Hour))
-	p.DeleteAt = p.CreatedAt.Add(timeScale)
 	serviceOrder := order.ServiceOrder{}
 	serviceOrder.OriderID = serviceCreate.ServiceCreateID
 	serviceOrder.OutPoint = serviceCreate.OutPoint
 	serviceOrder.CreatedAt = p.CreatedAt
-	serviceOrder.RemoveAt = p.DeleteAt
 	serviceOrder.OrderState = order.OrderStatePaying
 	serviceOrder.Drawee = serviceCreate.Drawee
 	serviceOrder.Balance = serviceCreate.Amount
 	serviceOrder.PayAmount = serviceCreate.Amount
+	serviceOrder.RemainingTimeDuration = timeScale
+	serviceOrder.TotalTimeDuration = timeScale
 	serviceOrder.ServicePrice = serviceCreate.ServicePrice
 	serviceOrder.LastStatementTime = p.CreatedAt
 	serviceOrder.MasterNodeFeeRate = serviceCreate.MasterNodeFeeRate
@@ -156,8 +156,8 @@ func serviceCreateOrder(p *service.PrizesService, serviceCreate *service.Service
 	serviceOrder.DevFeeRate = serviceCreate.DevFeeRate
 	serviceOrder.DevFeeAddress = serviceCreate.DevFeeAddress
 	p.NextCheckTime = p.CreatedAt.Add(StatementDuration)
-	if p.NextCheckTime.After(p.DeleteAt) {
-		p.NextCheckTime = p.DeleteAt
+	if p.NextCheckTime.After(p.CreatedAt.Add(timeScale)) {
+		p.NextCheckTime = p.CreatedAt.Add(timeScale)
 	}
 	p.Order = append(p.Order, serviceOrder)
 }
