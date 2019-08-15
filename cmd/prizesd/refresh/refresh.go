@@ -167,7 +167,7 @@ func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.
 					nowTime := time.Now().UTC()
 					lastAxisgo.EndAt = nowTime
 				} else {
-					logrus.Debug("updateTimeAxis same")
+					// logrus.Debug("updateTimeAxis same")
 					continue
 				}
 			}
