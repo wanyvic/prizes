@@ -160,10 +160,10 @@ func (r *RefreshMoudle) refreshDockerNode() error {
 }
 func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.Task) *prizeservice.ServiceTimeLine {
 	for _, task := range tasklist {
-		if task.DesiredState == swarm.TaskStateRunning && task.Status.State == swarm.TaskStateRunning {
-			if len(serviceTime.TimeAxis) > 0 {
+		if task.DesiredState == swarm.TaskStateRunning {
+			if len(serviceTime.TimeAxis) > 0 && serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1].EndAt.Before(time.Unix(0, 0).UTC()) {
 				lastAxisgo := &serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1]
-				if lastAxisgo.TaskID != task.ID {
+				if lastAxisgo.TaskID != task.ID || lastAxisgo.StatusState != task.Status.State {
 					nowTime := time.Now().UTC()
 					lastAxisgo.EndAt = nowTime
 				} else {
@@ -171,17 +171,19 @@ func updateTimeAxis(serviceTime *prizeservice.ServiceTimeLine, tasklist []swarm.
 					continue
 				}
 			}
-			logrus.Debug("updateTimeAxis new asis")
-			axis := prizeservice.StateTimeAxis{
-				TaskID:       task.ID,
-				Version:      task.Meta.Version.Index,
-				StartAt:      time.Now().UTC(),
-				DesiredState: task.DesiredState,
-				StatusState:  task.Status.State,
-				Msg:          task.Status.Message,
-				Err:          task.Status.Err,
+			if task.DesiredState == swarm.TaskStateRunning {
+				logrus.Debug("updateTimeAxis new asis")
+				axis := prizeservice.StateTimeAxis{
+					TaskID:       task.ID,
+					Version:      task.Meta.Version.Index,
+					StartAt:      time.Now().UTC(),
+					DesiredState: task.DesiredState,
+					StatusState:  task.Status.State,
+					Msg:          task.Status.Message,
+					Err:          task.Status.Err,
+				}
+				serviceTime.TimeAxis = append(serviceTime.TimeAxis, axis)
 			}
-			serviceTime.TimeAxis = append(serviceTime.TimeAxis, axis)
 			break
 		}
 	}
