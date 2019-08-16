@@ -31,6 +31,7 @@ func CheckCalculagraph() error {
 			return nil
 		}
 	}
+	logrus.Info("CheckCalculagraph exit")
 }
 func wait(sign *refresh.Signal) bool {
 	for i := refresh.TimeScale; i > 0; {

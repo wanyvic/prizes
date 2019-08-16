@@ -97,6 +97,7 @@ func (u *Server) Start() {
 	} else {
 		logrus.Error(fmt.Sprintf("%s://%s Server start error: undefine proto ", u.proto, u.addr))
 	}
+	logrus.Info("server exit")
 }
 
 func (u *Server) Stop() {

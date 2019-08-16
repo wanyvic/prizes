@@ -25,6 +25,7 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 		if prizeService.Order[i].OrderState == order.OrderStatePaying {
 
 			if len(serviceStatistics.TaskList) <= 0 {
+				prizeService.Order[i].LastStatementTime = NewCheckTime
 				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 				prizeService.LastCheckTime = prizeService.Order[i].LastStatementTime
 				if prizeService.NextCheckTime.After(prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)) {

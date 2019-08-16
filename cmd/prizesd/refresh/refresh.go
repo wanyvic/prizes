@@ -59,6 +59,7 @@ func (r *RefreshMoudle) whileLoop() error {
 			}
 		}
 	}
+	logrus.Info("refresh exit")
 }
 func RefreshStopService(serviceID string) error {
 	// logrus.Debug("RefreshStopService")
