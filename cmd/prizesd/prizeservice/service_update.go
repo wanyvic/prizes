@@ -21,13 +21,13 @@ func Update(prizeService *service.PrizesService, serviceUpdate *service.ServiceU
 	if err != nil {
 		return nil, err
 	}
-	prizeService.UpdateSpec = append(prizeService.UpdateSpec, *serviceUpdate)
 	serviceSpec := parseServiceUpdateSpec(&prizeService.DockerService, serviceUpdate)
+	serviceUpdateOrder(prizeService, serviceUpdate)
+	prizeService.UpdateSpec = append(prizeService.UpdateSpec, *serviceUpdate)
 	response, err := cli.ServiceUpdate(context.Background(), serviceUpdate.ServiceID, prizeService.DockerService.Meta.Version, *serviceSpec, types.ServiceUpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
-	serviceUpdateOrder(prizeService, serviceUpdate)
 
 	logrus.Info(fmt.Sprintf("UpdateService completed: ID: %s ,Warning: %s", serviceUpdate.ServiceID, response.Warnings))
 	return &response, nil
@@ -45,6 +45,7 @@ func parseServiceUpdateSpec(dockerservice *swarm.Service, serviceUpdate *service
 }
 func serviceUpdateOrder(p *service.PrizesService, serviceUpdate *service.ServiceUpdate) {
 	serviceOrder := order.ServiceOrder{}
+	serviceOrder.CreatedAt = time.Now().UTC()
 	serviceOrder.OriderID = serviceUpdate.ServiceUpdateID
 	serviceOrder.OutPoint = serviceUpdate.OutPoint
 	serviceOrder.Drawee = serviceUpdate.Drawee
