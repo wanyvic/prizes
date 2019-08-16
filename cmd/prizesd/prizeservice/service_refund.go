@@ -24,5 +24,6 @@ func Refund(prizeService *service.PrizesService) *order.RefundPayment {
 	}
 	refundPayment.TotalAmount = amount
 	prizeService.State = service.ServiceStateCompleted
+	prizeService.Refund = &refundPayment
 	return &refundPayment
 }
