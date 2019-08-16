@@ -87,7 +87,6 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 			return nil, err
 		}
 	}
-	logrus.Info(fmt.Sprintf("%+v", *statement))
 	return statement, nil
 }
 
