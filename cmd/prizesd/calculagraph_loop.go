@@ -23,15 +23,16 @@ func CheckCalculagraph() error {
 				continue
 			}
 			if wait(sign) {
+				logrus.Info("CheckCalculagraph exit")
 				return nil
 			}
 			continue
 		}
 		if wait(sign) {
+			logrus.Info("CheckCalculagraph exit")
 			return nil
 		}
 	}
-	logrus.Info("CheckCalculagraph exit")
 }
 func wait(sign *refresh.Signal) bool {
 	for i := refresh.TimeScale; i > 0; {
