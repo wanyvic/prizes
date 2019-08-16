@@ -91,9 +91,14 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 }
 
 //ServiceRefund returns RefundInfo and error
-func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
+func ServiceRefund(ServiceID string) (*order.RefundPayment, error) {
 	var err error
-	refundInfo := order.RefundInfo{}
+	refundPayment := &order.RefundPayment{}
+
+	_, err = ServiceStatement(ServiceID, time.Now().UTC())
+	if err != nil {
+		return nil, err
+	}
 	prizeService, err := db.DBimplement.FindPrizesServiceOne(ServiceID)
 	if err != nil {
 		return nil, err
@@ -101,17 +106,13 @@ func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
 	if prizeService.State == service.ServiceStateCompleted {
 		return nil, errors.New("service has been paid")
 	}
-	refundInfo.Statement, err = ServiceStatement(ServiceID, time.Now().UTC())
-	if err != nil {
-		return nil, err
-	}
-	refundInfo.RefundPay = prizeservice.Refund(prizeService)
+	refundPayment = prizeservice.Refund(prizeService)
 
-	hash, err := massgrid.SendMany(&refundInfo)
+	hash, err := massgrid.SendMany(refundPayment)
 	if err != nil {
 		return nil, err
 	}
-	refundInfo.RefundTransaction = *hash
+	refundPayment.RefundTransaction = *hash
 	err = serviceRemove(ServiceID)
 	if err != nil {
 		return nil, err
@@ -122,8 +123,8 @@ func ServiceRefund(ServiceID string) (*order.RefundInfo, error) {
 	}
 	calculagraph.RemoveService(ServiceID)
 
-	logrus.Info(fmt.Sprintf("%+v", refundInfo))
-	return &refundInfo, nil
+	logrus.Info(fmt.Sprintf("%+v", refundPayment))
+	return refundPayment, nil
 }
 
 func ServiceInfo(serviceID string) (*service.ServiceInfo, error) {

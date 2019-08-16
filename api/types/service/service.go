@@ -33,6 +33,7 @@ type PrizesService struct {
 	CreatedAt     time.Time
 	LastCheckTime time.Time
 	NextCheckTime time.Time
+	Refund        *order.RefundPayment
 }
 
 //ServiceState includes UNKNOWN RUNNING COMPLETE

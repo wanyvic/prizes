@@ -76,8 +76,8 @@ func SendMany(v interface{}) (*string, error) {
 				to[payment.ReceiveAddress] = amount
 			}
 		}
-	case *order.RefundInfo:
-		for _, payment := range value.Statement.Payments {
+	case *order.RefundPayment:
+		for _, payment := range value.Payments {
 			if _, err := LocalNormalizePublicKey(payment.ReceiveAddress); err != nil {
 				logrus.Warning(payment.ReceiveAddress, " not massgrid wallet import address")
 				continue
@@ -87,18 +87,6 @@ func SendMany(v interface{}) (*string, error) {
 				to[payment.ReceiveAddress] = v + amount
 			} else {
 				to[payment.ReceiveAddress] = amount
-			}
-		}
-		for _, refund := range *value.RefundPay {
-			if _, err := LocalNormalizePublicKey(refund.Drawee); err != nil {
-				logrus.Warning(refund.Drawee, " not massgrid wallet import address")
-				continue
-			}
-			amount := float64(refund.TotalAmount) / 100000000
-			if v, ok := to[refund.Drawee].(float64); ok {
-				to[refund.Drawee] = v + amount
-			} else {
-				to[refund.Drawee] = amount
 			}
 		}
 	default:
