@@ -70,9 +70,10 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 	if statement != nil {
 		hash, err := massgrid.SendMany(statement)
 		if err != nil {
-			return nil, err
+			logrus.Error("statement sendMany ", err)
+		} else {
+			statement.StatementTransaction = *hash
 		}
-		statement.StatementTransaction = *hash
 	}
 	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
 	if err != nil {
@@ -110,9 +111,10 @@ func ServiceRefund(ServiceID string) (*order.RefundPayment, error) {
 
 	hash, err := massgrid.SendMany(refundPayment)
 	if err != nil {
-		return nil, err
+		logrus.Error("refund SendMany ", err)
+	} else {
+		refundPayment.RefundTransaction = *hash
 	}
-	refundPayment.RefundTransaction = *hash
 	err = serviceRemove(ServiceID)
 	if err != nil {
 		return nil, err
@@ -123,7 +125,7 @@ func ServiceRefund(ServiceID string) (*order.RefundPayment, error) {
 	}
 	calculagraph.RemoveService(ServiceID)
 
-	logrus.Info(fmt.Sprintf("%+v", refundPayment))
+	// logrus.Info(fmt.Sprintf("%+v", refundPayment))
 	return refundPayment, nil
 }
 
