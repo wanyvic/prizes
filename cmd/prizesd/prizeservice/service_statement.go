@@ -26,10 +26,11 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 
 			if len(serviceStatistics.TaskList) <= 0 {
 				prizeService.Order[i].LastStatementTime = NewCheckTime
-				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 				prizeService.LastCheckTime = prizeService.Order[i].LastStatementTime
-				if prizeService.NextCheckTime.After(prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)) {
-					prizeService.NextCheckTime = prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)
+				if prizeService.NextCheckTime.Add(StatementDuration).After(prizeService.NextCheckTime.Add(prizeService.Order[i].RemainingTimeDuration)) {
+					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(prizeService.Order[i].RemainingTimeDuration)
+				} else {
+					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 				}
 				return nil, service.ServiceStateRunning, errors.New("no task need be statement")
 			}
@@ -41,16 +42,18 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 					prizeService.Order[i+1].OrderState = order.OrderStatePaying
 					prizeService.Order[i+1].LastStatementTime = prizeService.Order[i].LastStatementTime
 					prizeService.LastCheckTime = prizeService.Order[i+1].LastStatementTime
-					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
-					if prizeService.NextCheckTime.After(prizeService.Order[i+1].CreatedAt.Add(prizeService.Order[i+1].TotalTimeDuration)) {
-						prizeService.NextCheckTime = prizeService.Order[i+1].CreatedAt.Add(prizeService.Order[i+1].TotalTimeDuration)
+					if prizeService.NextCheckTime.Add(StatementDuration).After(prizeService.NextCheckTime.Add(prizeService.Order[i+1].RemainingTimeDuration)) {
+						prizeService.NextCheckTime = prizeService.NextCheckTime.Add(prizeService.Order[i+1].RemainingTimeDuration)
+					} else {
+						prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 					}
 				}
 			} else {
-				prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 				prizeService.LastCheckTime = prizeService.Order[i].LastStatementTime
-				if prizeService.NextCheckTime.After(prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)) {
-					prizeService.NextCheckTime = prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)
+				if prizeService.NextCheckTime.Add(StatementDuration).After(prizeService.NextCheckTime.Add(prizeService.Order[i].RemainingTimeDuration)) {
+					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(prizeService.Order[i].RemainingTimeDuration)
+				} else {
+					prizeService.NextCheckTime = prizeService.NextCheckTime.Add(StatementDuration)
 				}
 			}
 			return statement, prizeService.State, nil

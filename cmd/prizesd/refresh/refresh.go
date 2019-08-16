@@ -87,12 +87,16 @@ func (r *RefreshMoudle) refreshDockerTaskFromService(serviceID string) error {
 	}
 	validNameFilter := filters.NewArgs()
 	validNameFilter.Add("service", serviceID)
+	validNameFilter.Add("desired-state", string(swarm.TaskStateRunning))
 	tasklist, err := cli.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
 	if err != nil {
 		return err
 	}
 	for _, task := range tasklist {
 		// logrus.Debug("\ttask: ", task.ID)
+		if task.Status.State != swarm.TaskStateRunning {
+			continue
+		}
 		if _, err := db.DBimplement.UpdateTaskOne(task); err != nil {
 			return err
 		}

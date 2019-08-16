@@ -19,6 +19,8 @@ func ServiceState(serviceID string, startTime time.Time, endTime time.Time) (typ
 		return serviceStatistics, err
 	}
 	serviceStatistics.ServiceID = serviceID
+	serviceStatistics.StartAt = startTime
+	serviceStatistics.EndAt = endTime
 	var taskStatistics []types.TaskStatistics
 	for _, timeAxis := range serviceTimeAxis.TimeAxis {
 		if timeAxis.EndAt.Before(time.Unix(0, 0).UTC()) {
