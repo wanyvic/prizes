@@ -31,7 +31,7 @@ func Statement(prizeService *service.PrizesService, serviceStatistics prizestype
 				if prizeService.NextCheckTime.After(prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)) {
 					prizeService.NextCheckTime = prizeService.Order[i].CreatedAt.Add(prizeService.Order[i].TotalTimeDuration)
 				}
-				return nil, service.ServiceStateUnknown, errors.New("no task need be statement")
+				return nil, service.ServiceStateRunning, errors.New("no task need be statement")
 			}
 			statement, orderState := statementOrder(&prizeService.Order[i], &serviceStatistics, LastCheckTime, NewCheckTime)
 			if orderState == order.OrderStateHasBeenPaid {
