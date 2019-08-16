@@ -21,10 +21,12 @@ func ServiceInfo(prizeService *service.PrizesService) (*service.ServiceInfo, err
 	serviceInfo.ServiceID = prizeService.DockerService.ID
 	serviceInfo.CreatedAt = prizeService.CreatedAt
 	serviceInfo.NextCheckTime = prizeService.NextCheckTime
+	serviceInfo.LastCheckTime = prizeService.LastCheckTime
 	serviceInfo.Order = prizeService.Order
 	serviceInfo.CreateSpec = prizeService.CreateSpec
 	serviceInfo.UpdateSpec = prizeService.UpdateSpec
 	serviceInfo.State = prizeService.State
+	serviceInfo.Refund = prizeService.Refund
 
 	for i := 0; i < len(serviceInfo.Order); i++ {
 		serviceInfo.Order[i].Statement = serviceInfo.Order[i].Statement[0:0]
