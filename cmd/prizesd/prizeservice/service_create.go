@@ -59,9 +59,6 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	// parse service labels
 	spec.Labels = make(map[string]string)
 
-	timeScale := time.Duration(float64(serviceCreate.Amount) / float64(serviceCreate.ServicePrice) * float64(time.Hour))
-	DeleteAt := time.Now().UTC().Add(timeScale)
-	spec.Labels["com.massgird.deletetime"] = DeleteAt.String()
 	spec.Labels["com.massgrid.pubkey"] = serviceCreate.Pubkey
 	spec.Labels["com.massgrid.price"] = strconv.FormatInt(serviceCreate.ServicePrice, 10)
 	spec.Labels["com.massgrid.payment"] = strconv.FormatInt(serviceCreate.Amount, 10)

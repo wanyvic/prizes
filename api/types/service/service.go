@@ -61,7 +61,6 @@ const (
 type ServiceInfo struct {
 	ServiceID     string               `json:"service_id,omitempty"`
 	CreatedAt     time.Time            `json:"create_at,omitempty"`
-	DeleteAt      time.Time            `json:"delete_at,omitempty"`
 	NextCheckTime time.Time            `json:"next_check_time,omitempty"`
 	Order         []order.ServiceOrder `json:"order,omitempty"`
 	CreateSpec    ServiceCreate        `json:"create_spec,omitempty"`
