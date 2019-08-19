@@ -61,6 +61,7 @@ func ProxyServiceSpec() swarm.ServiceSpec {
 	spec := swarm.ServiceSpec{}
 	spec.Name = ProxyName
 	spec.Mode.Global = &swarm.GlobalService{}
+	spec.TaskTemplate.ContainerSpec = &swarm.ContainerSpec{}
 	spec.TaskTemplate.ContainerSpec.Image = ProxyImage
 	spec.TaskTemplate.ContainerSpec.Labels = make(map[string]string)
 	spec.TaskTemplate.ContainerSpec.Labels["com.massgrid.type"] = "proxy"
