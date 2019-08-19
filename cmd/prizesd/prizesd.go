@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/docker/docker/pkg/pidfile"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/docker/docker/pkg/term"
 	"github.com/docker/docker/rootless"
@@ -18,6 +20,7 @@ import (
 
 var (
 	honorXDG bool
+	PIDFile  = "prizesd.pid"
 )
 
 func newDaemonCommand() (*cobra.Command, error) {
@@ -87,7 +90,6 @@ func main() {
 	if reexec.Init() {
 		return
 	}
-
 	// initial log formatting; this setting is updated after the daemon configuration is loaded.
 	logrus.SetFormatter(&logrus.TextFormatter{
 		TimestampFormat: "2006-01-02T15:04:05.000000000Z07:00",
@@ -102,6 +104,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := PIDFileCheck(); err != nil {
+		onError(err)
+	}
 	cmd, err := newDaemonCommand()
 	if err != nil {
 		onError(err)
@@ -110,5 +115,14 @@ func main() {
 	if err := cmd.Execute(); err != nil {
 		onError(err)
 	}
-	logrus.Info("prizesd exit")
+	logrus.Debug("prizesd exit")
+}
+func PIDFileCheck() error {
+	path := filepath.Join(os.TempDir(), PIDFile)
+	file, err := pidfile.New(path)
+	if err != nil {
+		return errors.New("prizesd has been started, please stop first")
+	}
+	logrus.Debug(file)
+	return nil
 }

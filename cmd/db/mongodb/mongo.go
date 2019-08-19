@@ -185,14 +185,19 @@ func (m *MongDBClient) FindPrizesServiceOne(serviceID string) (*service.PrizesSe
 	return &prizeService, nil
 }
 
-func (m *MongDBClient) FindPrizesServiceFromPubkey(pubkey string) (*[]service.PrizesService, error) {
+func (m *MongDBClient) FindPrizesServiceFromPubkey(pubkey string, start int64, count int64, full bool) (*[]service.PrizesService, error) {
 	var servicelist []service.PrizesService
+	var cursor *mongo.Cursor
+	var err error
 	if err := m.RefreshMongoDBConnection(); err != nil {
 		return nil, err
 	}
 	collection := m.mongoDBReader.Database(m.DataBase).Collection("service")
-
-	cursor, err := collection.Find(context.Background(), bson.M{"createspec.pubkey": bson.M{"$eq": pubkey}}, nil)
+	if full {
+		cursor, err = collection.Find(context.Background(), bson.M{"createspec.pubkey": bson.M{"$eq": pubkey}}, options.Find().SetLimit(count), options.Find().SetSkip(start), options.Find().SetSort(bson.M{"createdat": -1}), nil)
+	} else {
+		cursor, err = collection.Find(context.Background(), bson.M{"createspec.pubkey": bson.M{"$eq": pubkey}, "state": bson.M{"$eq": "running"}}, options.Find().SetLimit(count), options.Find().SetSkip(start), options.Find().SetSort(bson.M{"createdat": -1}), nil)
+	}
 	if err != nil {
 		return nil, err
 	}

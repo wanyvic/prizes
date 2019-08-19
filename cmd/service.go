@@ -18,6 +18,12 @@ import (
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh/calculagraph"
 )
 
+type FindFilters struct {
+	Full  bool
+	Start int64
+	Count int64
+}
+
 //ServiceCreate returns response and error
 func ServiceCreate(serviceCreate *service.ServiceCreate) (*types.ServiceCreateResponse, error) {
 	prizeService, response, err := prizeservice.Create(serviceCreate)
@@ -141,9 +147,9 @@ func ServiceInfo(serviceID string) (*service.ServiceInfo, error) {
 	return serviceInfo, nil
 }
 
-func GetServicesFromPubkey(pubkey string) (*[]service.ServiceInfo, error) {
+func GetServicesFromPubkey(pubkey string, start int64, count int64, full bool) (*[]service.ServiceInfo, error) {
 	serviceInfoList := []service.ServiceInfo{}
-	prizeServiceList, err := db.DBimplement.FindPrizesServiceFromPubkey(pubkey)
+	prizeServiceList, err := db.DBimplement.FindPrizesServiceFromPubkey(pubkey, start, count, full)
 	if err != nil {
 		return nil, err
 	}

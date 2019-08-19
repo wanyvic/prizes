@@ -13,3 +13,5 @@
 daemon
 .prizes.yaml
 cmd/prizesd/prizesd
+prizesversion/version.go
+prizesd

@@ -156,7 +156,22 @@ func GetService(w http.ResponseWriter, r *http.Request) {
 }
 func GetServicesFromPubkey(w http.ResponseWriter, r *http.Request) {
 	pubkey := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
-	serviceInfoList, err := cmd.GetServicesFromPubkey(pubkey)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		logrus.Warning("ioutil.ReadAll faild")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, parseError(errors.New("parameters invalid")))
+		return
+	}
+	logrus.Debug("body: ", string(body))
+	defer r.Body.Close()
+	var filter cmd.FindFilters
+	if err := json.Unmarshal(body, &filter); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, parseError(errors.New("parameters invalid")))
+		return
+	}
+	serviceInfoList, err := cmd.GetServicesFromPubkey(pubkey, filter.Start, filter.Count, filter.Full)
 	if err != nil {
 		logrus.Error(err)
 		w.WriteHeader(http.StatusForbidden)
