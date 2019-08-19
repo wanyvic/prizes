@@ -19,6 +19,7 @@ import (
 	"github.com/wanyvic/prizes/cmd/db"
 	"github.com/wanyvic/prizes/cmd/db/mongodb"
 	"github.com/wanyvic/prizes/cmd/prizesd/config"
+	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 	"github.com/wanyvic/prizes/cmd/prizesd/massgrid"
 	"github.com/wanyvic/prizes/cmd/prizesd/prizeservice"
 	"github.com/wanyvic/prizes/cmd/prizesd/refresh"
@@ -127,6 +128,9 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	}
 
 	logrus.Info("Starting up")
+	if err := dockerapi.NewProxy(); err != nil {
+		logrus.Warning(err)
+	}
 	if err := configureServer(opts.Hosts); err != nil {
 		logrus.Warning(err)
 	}
