@@ -136,8 +136,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		GetServicesFromPubkey(w, r)
 	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "getnodes") == 0:
 		GetNodeList(w, r)
-	// case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "getnode") == 0:
-	// 	GetNode(w, r)
+	case strings.Compare(strings.ToLower(splitArray[cmdIndex]), "servicerecheck") == 0:
+		GetServiceReCheck(w, r)
 	default:
 		otherCommand(w, r)
 	}

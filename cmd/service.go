@@ -164,6 +164,14 @@ func GetServicesFromPubkey(pubkey string, start int64, count int64, full bool) (
 }
 
 func serviceRemove(serviceID string) error {
+	serviceTime, err := db.DBimplement.FindStateTimeAxisOne(serviceID)
+	if err != nil {
+		return err
+	}
+	serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1].EndAt = time.Now().UTC()
+	if _, err := db.DBimplement.UpdateStateTimeAxisOne(*serviceTime); err != nil {
+		return err
+	}
 	cli, err := dockerapi.GetDockerClient()
 	if err != nil {
 		return err
@@ -178,4 +186,45 @@ func serviceRemove(serviceID string) error {
 	}
 	logrus.Info(fmt.Sprintf("RemoveService completed: ID: %s", serviceID))
 	return nil
+}
+func ServiceReCheck(ServiceID string) error {
+	prizeService, err := db.DBimplement.FindPrizesServiceOne(ServiceID)
+	if err != nil {
+		return err
+	}
+	serviceStatistics, err := ServiceState(ServiceID, time.Unix(0, 0).UTC(), time.Now().UTC())
+	if err != nil {
+		return err
+	}
+	totalUseTime := time.Duration(0)
+	for _, order := range prizeService.Order {
+		totalAmount := int64(0)
+		for _, statement := range order.Statement {
+			totalAmount += less(statement.TotalAmount)
+			if statement.StatementTransaction == "" {
+				logrus.Error(statement.StatementID, " not found txid")
+				return fmt.Errorf(statement.StatementID, " not found txid")
+			}
+		}
+		if order.Balance != order.PayAmount-totalAmount {
+			logrus.Error("mismatch order balance order.balance ", order.Balance, " statement totalAmount ", order.PayAmount-totalAmount)
+			return fmt.Errorf("mismatch order balance order.balance ", order.Balance, " statement totalAmount ", order.PayAmount-totalAmount)
+		}
+		totalUseTime += order.TotalTimeDuration - order.RemainingTimeDuration
+	}
+	totalTaskUseTime := time.Duration(0)
+	for _, time_axis := range serviceStatistics.TaskList {
+		totalTaskUseTime += time_axis.EndAt.Sub(time_axis.StartAt)
+	}
+	if totalTaskUseTime < totalUseTime {
+		logrus.Error("mismatch totalTaskUseTime ", totalTaskUseTime, " totalUseTime ", totalUseTime)
+		return fmt.Errorf("mismatch totalTaskUseTime ", totalTaskUseTime, " totalUseTime ", totalUseTime)
+	}
+	return nil
+}
+func less(a int64) int64 {
+	if a < 0 {
+		logrus.Error("less than zero")
+	}
+	return a
 }

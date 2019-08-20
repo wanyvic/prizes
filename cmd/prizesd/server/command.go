@@ -187,6 +187,24 @@ func GetServicesFromPubkey(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, strResult)
 }
+func GetServiceReCheck(w http.ResponseWriter, r *http.Request) {
+	serviceID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
+	err := cmd.ServiceReCheck(serviceID)
+	if err != nil {
+		logrus.Error(err)
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintf(w, parseError(err))
+		return
+	}
+	strResult, successd := parseResult("Testing pass")
+	if !successd {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintf(w, strResult)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, strResult)
+}
 func GetNode(w http.ResponseWriter, r *http.Request) {
 	NodeID := r.URL.String()[strings.LastIndex(r.URL.String(), "/")+1:]
 	node, err := cmd.GetNodeInfo(NodeID)
