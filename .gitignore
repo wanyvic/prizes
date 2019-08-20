@@ -12,6 +12,7 @@
 *.out
 daemon
 .prizes.yaml
-cmd/prizesd/prizesd
-prizesversion/version.go
 prizesd
+cmd/prizesd/prizesd
+!cmd/prizesd/
+prizesversion/version.go
