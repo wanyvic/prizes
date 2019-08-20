@@ -206,7 +206,7 @@ func ServiceReCheck(ServiceID string) error {
 				return fmt.Errorf(statement.StatementID, " not found txid")
 			}
 		}
-		if order.Balance != order.PayAmount-totalAmount {
+		if order.Balance+order.Refund != order.PayAmount-totalAmount {
 			logrus.Error("mismatch order balance order.balance ", order.Balance, " statement totalAmount ", order.PayAmount-totalAmount)
 			return fmt.Errorf("mismatch order balance order.balance ", order.Balance, " statement totalAmount ", order.PayAmount-totalAmount)
 		}

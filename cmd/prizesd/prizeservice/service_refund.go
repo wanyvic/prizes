@@ -19,6 +19,7 @@ func Refund(prizeService *service.PrizesService) *order.RefundPayment {
 		payment.Amount = prizeService.Order[i].Balance
 		refundPayment.Payments = append(refundPayment.Payments, payment)
 		amount += prizeService.Order[i].Balance
+		prizeService.Order[i].Refund = prizeService.Order[i].Balance
 		prizeService.Order[i].Balance = 0
 		prizeService.Order[i].RemainingTimeDuration = 0
 	}
