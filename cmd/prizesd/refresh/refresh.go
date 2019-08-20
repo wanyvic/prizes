@@ -115,6 +115,9 @@ func (r *RefreshMoudle) refreshDockerService() error {
 	}
 
 	for _, service := range servicelist {
+		if service.Spec.Annotations.Name == "massgrid_proxy" {
+			continue
+		}
 		validNameFilter := filters.NewArgs()
 		validNameFilter.Add("service", service.ID)
 		tasklist, err := cli.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
