@@ -101,7 +101,7 @@ func SendMany(v interface{}) (*string, error) {
 	}
 	cli := NewClientWithoutOpts()
 	defer cli.Shutdown()
-	hash, err := cli.SendManyEntire("", to, 6, false, "massgrid statement", feeAddress, false)
+	hash, err := cli.SendManyEntire("", to, 6, false, "massgrid statement", feeAddress, false, true)
 	if err != nil {
 		logrus.Error("sendmany request error ", err)
 		return nil, err
