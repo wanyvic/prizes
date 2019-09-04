@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
+project_path=$(cd `dirname $0`; pwd)
+mkdir -p "${project_path}/prizesversion"
 GITCOMMIT=$(git rev-parse --short HEAD)
 VERSION=$(git describe --abbrev=0 --tags)
 BUILDTIME=$(date -u -d "@${SOURCE_DATE_EPOCH:-$(date +%s)}" --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')
-cat > prizesversion/version.go <<DVEOF
+cat > ${project_path}/prizesversion/version.go <<DVEOF
 // +build autogen
 // Package prizesversion is auto-generated at build-time
 package prizesversion
@@ -14,4 +16,4 @@ const (
 	BuildTime             string = "$BUILDTIME"
 )
 DVEOF
-go build -work ./cmd/prizesd/
+go build -work ${project_path}/cmd/prizesd/
