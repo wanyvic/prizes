@@ -110,7 +110,7 @@ func parseServiceCreateSpec(serviceCreate *service.ServiceCreate) *swarm.Service
 	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelGPUType+"="+serviceCreate.Hardware.GPUType)
 	spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, prizestypes.LabelGPUCount+"="+strconv.FormatInt(serviceCreate.Hardware.GPUCount, 10))
 	for k, v := range serviceCreate.ENV {
-		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, strings.ToUpper(k+"="+v))
+		spec.TaskTemplate.ContainerSpec.Env = append(spec.TaskTemplate.ContainerSpec.Env, strings.ToUpper(k)+"="+v)
 	}
 
 	//parse service constraints
