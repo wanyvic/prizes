@@ -115,15 +115,15 @@ func ServiceRefund(ServiceID string) (*order.RefundPayment, error) {
 	}
 	refundPayment = prizeservice.Refund(prizeService)
 
+	err = serviceRemove(ServiceID)
+	if err != nil {
+		return nil, err
+	}
 	hash, err := massgrid.SendMany(refundPayment)
 	if err != nil {
 		logrus.Error("refund SendMany ", err)
 	} else {
 		refundPayment.RefundTransaction = *hash
-	}
-	err = serviceRemove(ServiceID)
-	if err != nil {
-		return nil, err
 	}
 	_, err = db.DBimplement.UpdatePrizesServiceOne(*prizeService)
 	if err != nil {
@@ -168,7 +168,9 @@ func serviceRemove(serviceID string) error {
 	if err != nil {
 		return err
 	}
-	serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1].EndAt = time.Now().UTC()
+	if len(serviceTime.TimeAxis) > 0 {
+		serviceTime.TimeAxis[len(serviceTime.TimeAxis)-1].EndAt = time.Now().UTC()
+	}
 	if _, err := db.DBimplement.UpdateStateTimeAxisOne(*serviceTime); err != nil {
 		return err
 	}
