@@ -18,7 +18,7 @@ func CheckCalculagraph() error {
 				item := calculagraph.Pop()
 				logrus.Info("CheckCalculagraph check one ", item.ServiceID, " ", item.CheckAt)
 				if _, err := cmd.ServiceStatement(item.ServiceID, item.CheckAt); err != nil {
-					return err
+					logrus.Error(err)
 				}
 				continue
 			}
