@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/swarm"
+	"github.com/sirupsen/logrus"
 	"github.com/wanyvic/prizes/api/types/service"
 	dockerapi "github.com/wanyvic/prizes/cmd/prizesd/docker"
 )
@@ -43,7 +44,7 @@ func ServiceInfo(prizeService *service.PrizesService) (*service.ServiceInfo, err
 		validNameFilter.Add("desired-state", string(swarm.TaskStateAccepted))
 		tasklist, err := cli.TaskList(context.Background(), types.TaskListOptions{Filters: validNameFilter})
 		if err != nil {
-			return nil, err
+			logrus.Warning(serviceInfo.ServiceID, " not found")
 		}
 		if len(tasklist) > 0 {
 			serviceInfo.TaskInfo = &tasklist[0]
