@@ -180,11 +180,11 @@ func serviceRemove(serviceID string) error {
 	}
 	err = cli.ServiceRemove(context.Background(), serviceID)
 	if err != nil {
-		return err
+		logrus.Warning("serviceremove not found service ", serviceID)
 	}
 	err = refresh.RefreshStopService(serviceID)
 	if err != nil {
-		logrus.Warning("serviceremove not found service ", serviceID)
+		return err
 	}
 	logrus.Info(fmt.Sprintf("RemoveService completed: ID: %s", serviceID))
 	return nil
