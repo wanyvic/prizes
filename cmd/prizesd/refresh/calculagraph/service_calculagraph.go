@@ -3,6 +3,7 @@ package calculagraph
 import (
 	"container/heap"
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -87,6 +88,7 @@ func RemoveService(ServiceID string) {
 			} else {
 				PrioritySequence = append(PrioritySequence[:i], PrioritySequence[i+1:]...)
 			}
+			fmt.Println(PrioritySequence)
 			heap.Fix(&PrioritySequence, i)
 			return
 		}

@@ -89,10 +89,10 @@ func ServiceStatement(ServiceID string, statementAt time.Time) (*order.Statement
 		calculagraph.ChangeCheckTime(prizeService.DockerService.ID, prizeService.NextCheckTime)
 	} else if serviceState == service.ServiceStateCompleted {
 		err := serviceRemove(ServiceID)
-		calculagraph.RemoveService(ServiceID)
 		if err != nil {
 			return nil, err
 		}
+		calculagraph.RemoveService(ServiceID)
 	}
 	return statement, nil
 }
