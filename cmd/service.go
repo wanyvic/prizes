@@ -184,7 +184,7 @@ func serviceRemove(serviceID string) error {
 	}
 	err = refresh.RefreshStopService(serviceID)
 	if err != nil {
-		return err
+		logrus.Warning("serviceremove not found service ", serviceID)
 	}
 	logrus.Info(fmt.Sprintf("RemoveService completed: ID: %s", serviceID))
 	return nil
