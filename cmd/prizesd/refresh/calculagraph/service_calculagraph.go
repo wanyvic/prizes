@@ -3,7 +3,6 @@ package calculagraph
 import (
 	"container/heap"
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -83,13 +82,8 @@ func RemoveService(ServiceID string) {
 	logrus.Info("RemoveService ", ServiceID)
 	for i := 0; i < len(PrioritySequence); i++ {
 		if PrioritySequence[i].ServiceID == ServiceID {
-			if i == len(PrioritySequence)-1 {
-				PrioritySequence = append(PrioritySequence[:i])
-			} else {
-				PrioritySequence = append(PrioritySequence[:i], PrioritySequence[i+1:]...)
-			}
-			fmt.Println(PrioritySequence)
-			heap.Fix(&PrioritySequence, i)
+			heap.Remove(&PrioritySequence, i)
+			logrus.Debug(PrioritySequence)
 			return
 		}
 	}
