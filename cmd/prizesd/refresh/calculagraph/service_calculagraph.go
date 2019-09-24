@@ -85,7 +85,7 @@ func RemoveService(ServiceID string) {
 			if i == len(PrioritySequence)-1 {
 				PrioritySequence = append(PrioritySequence[:i])
 			} else {
-				PrioritySequence = append(PrioritySequence[:i], PrioritySequence[i+1])
+				PrioritySequence = append(PrioritySequence[:i], PrioritySequence[i+1:]...)
 			}
 			heap.Fix(&PrioritySequence, i)
 			return
